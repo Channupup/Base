@@ -898,9 +898,9 @@ void NoximNoC::setTemperature(){
 		t[m][n][o]->r->stats.last_temperature = t[m][n][o]->r->stats.temperature;
 		t[m][n][o]->r->stats.temperature      = TemperatureTrace[3*idx];     
         //thermal budget
-		temp_budget[m][n][o]            	  = TEMP_THRESHOLD - t[m][n][o]->r->stats.temperature; // Derek 2012.10.16 	
-		if (temp_budget[m][n][o]<0)
-			temp_budget[m][n][o] = 0;	
+		// temp_budget[m][n][o]            	  = TEMP_THRESHOLD - t[m][n][o]->r->stats.temperature; // Derek 2012.10.16 	
+		// if (temp_budget[m][n][o]<0)
+		// 	temp_budget[m][n][o] = 0;	
 		//thermal prediction
 		if(t[m][n][o]->r->stats.temperature > 85)
 		{
