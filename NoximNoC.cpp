@@ -12,17 +12,20 @@
 #include <sys/stat.h>
 using namespace std;
 
-bool throttling[20][20][4];
+
 int beltway[20][20][4];		
-float temp_budget[20][20][4];	  // Derek 2012.10.16
-float thermal_factor[20][20][4];  // Derek 2012.12.14
-float penalty_factor[20][20][4];  // Derek 2012.12.17
-float MTTT[20][20][4];
+// float temp_budget[20][20][4];	  // Derek 2012.10.16
+// float thermal_factor[20][20][4];  // Derek 2012.12.14
+// float penalty_factor[20][20][4];  // Derek 2012.12.17
+// float MTTT[20][20][4];
 int traffic[20][20][4];
-int num_pkt = 2800;
-double consumption_rate[20][20][4]; 
+//int num_pkt = 2800;
+// double consumption_rate[20][20][4];
+
+bool throttling[20][20][4];
 extern ofstream transient_log_throughput;
 extern ofstream transient_topology;
+extern ofstream traffic_analysis;
 
 void NoximNoC::buildMesh()
 {
@@ -37,7 +40,7 @@ void NoximNoC::buildMesh()
 	
     // Create the mesh as a matrix of tiles
 	int i,j,k;
-	char _name[20];
+	char _name[40];
 	for ( i = 0; i < NoximGlobalParams::mesh_dim_x; i++) 
 	for ( j = 0; j < NoximGlobalParams::mesh_dim_y; j++){
 		sprintf( _name, "VLink[%02d][%02d]", i, j);
@@ -130,51 +133,51 @@ void NoximNoC::buildMesh()
 			t[i][j][k]->free_slots_neighbor[DIRECTION_DOWN ] (free_slots_to_up   [i  ][j  ][k+1]);
 
 			
-			// NoP 
-			t[i][j][k]->NoP_data_out       [DIRECTION_NORTH] (NoP_data_to_north  [i  ][j  ][k  ]);
-			t[i][j][k]->NoP_data_out       [DIRECTION_EAST ] (NoP_data_to_east   [i+1][j  ][k  ]);
-			t[i][j][k]->NoP_data_out       [DIRECTION_SOUTH] (NoP_data_to_south  [i  ][j+1][k  ]);
-			t[i][j][k]->NoP_data_out       [DIRECTION_WEST ] (NoP_data_to_west   [i  ][j  ][k  ]);
-			t[i][j][k]->NoP_data_out       [DIRECTION_UP   ] (NoP_data_to_up     [i  ][j  ][k  ]);
-			t[i][j][k]->NoP_data_out       [DIRECTION_DOWN ] (NoP_data_to_down   [i  ][j  ][k+1]);
+			// // NoP 
+			// t[i][j][k]->NoP_data_out       [DIRECTION_NORTH] (NoP_data_to_north  [i  ][j  ][k  ]);
+			// t[i][j][k]->NoP_data_out       [DIRECTION_EAST ] (NoP_data_to_east   [i+1][j  ][k  ]);
+			// t[i][j][k]->NoP_data_out       [DIRECTION_SOUTH] (NoP_data_to_south  [i  ][j+1][k  ]);
+			// t[i][j][k]->NoP_data_out       [DIRECTION_WEST ] (NoP_data_to_west   [i  ][j  ][k  ]);
+			// t[i][j][k]->NoP_data_out       [DIRECTION_UP   ] (NoP_data_to_up     [i  ][j  ][k  ]);
+			// t[i][j][k]->NoP_data_out       [DIRECTION_DOWN ] (NoP_data_to_down   [i  ][j  ][k+1]);
 																				
-			t[i][j][k]->NoP_data_in        [DIRECTION_NORTH] (NoP_data_to_south  [i  ][j  ][k  ]);
-			t[i][j][k]->NoP_data_in        [DIRECTION_EAST ] (NoP_data_to_west   [i+1][j  ][k  ]);
-			t[i][j][k]->NoP_data_in        [DIRECTION_SOUTH] (NoP_data_to_north  [i  ][j+1][k  ]);
-			t[i][j][k]->NoP_data_in        [DIRECTION_WEST ] (NoP_data_to_east   [i  ][j  ][k  ]);
-			t[i][j][k]->NoP_data_in        [DIRECTION_UP   ] (NoP_data_to_down   [i  ][j  ][k  ]);
-			t[i][j][k]->NoP_data_in        [DIRECTION_DOWN ] (NoP_data_to_up     [i  ][j  ][k+1]);
+			// t[i][j][k]->NoP_data_in        [DIRECTION_NORTH] (NoP_data_to_south  [i  ][j  ][k  ]);
+			// t[i][j][k]->NoP_data_in        [DIRECTION_EAST ] (NoP_data_to_west   [i+1][j  ][k  ]);
+			// t[i][j][k]->NoP_data_in        [DIRECTION_SOUTH] (NoP_data_to_north  [i  ][j+1][k  ]);
+			// t[i][j][k]->NoP_data_in        [DIRECTION_WEST ] (NoP_data_to_east   [i  ][j  ][k  ]);
+			// t[i][j][k]->NoP_data_in        [DIRECTION_UP   ] (NoP_data_to_down   [i  ][j  ][k  ]);
+			// t[i][j][k]->NoP_data_in        [DIRECTION_DOWN ] (NoP_data_to_up     [i  ][j  ][k+1]);
 			// Derek @2012.03.07
-			t[i][j][k]->RCA_data_out[DIRECTION_NORTH*2+0](RCA_data_to_north0[i][j][k]);
-			t[i][j][k]->RCA_data_out[DIRECTION_NORTH*2+1](RCA_data_to_north1[i][j][k]);
-			t[i][j][k]->RCA_data_out[DIRECTION_EAST*2+0](RCA_data_to_east0[i+1][j][k]);
-			t[i][j][k]->RCA_data_out[DIRECTION_EAST*2+1](RCA_data_to_east1[i+1][j][k]);
-			t[i][j][k]->RCA_data_out[DIRECTION_SOUTH*2+0](RCA_data_to_south0[i][j+1][k]);
-			t[i][j][k]->RCA_data_out[DIRECTION_SOUTH*2+1](RCA_data_to_south1[i][j+1][k]);
-			t[i][j][k]->RCA_data_out[DIRECTION_WEST*2+0](RCA_data_to_west0[i][j][k]);
-			t[i][j][k]->RCA_data_out[DIRECTION_WEST*2+1](RCA_data_to_west1[i][j][k]);
+			// t[i][j][k]->RCA_data_out[DIRECTION_NORTH*2+0](RCA_data_to_north0[i][j][k]);
+			// t[i][j][k]->RCA_data_out[DIRECTION_NORTH*2+1](RCA_data_to_north1[i][j][k]);
+			// t[i][j][k]->RCA_data_out[DIRECTION_EAST*2+0](RCA_data_to_east0[i+1][j][k]);
+			// t[i][j][k]->RCA_data_out[DIRECTION_EAST*2+1](RCA_data_to_east1[i+1][j][k]);
+			// t[i][j][k]->RCA_data_out[DIRECTION_SOUTH*2+0](RCA_data_to_south0[i][j+1][k]);
+			// t[i][j][k]->RCA_data_out[DIRECTION_SOUTH*2+1](RCA_data_to_south1[i][j+1][k]);
+			// t[i][j][k]->RCA_data_out[DIRECTION_WEST*2+0](RCA_data_to_west0[i][j][k]);
+			// t[i][j][k]->RCA_data_out[DIRECTION_WEST*2+1](RCA_data_to_west1[i][j][k]);
             
-			t[i][j][k]->RCA_data_in[DIRECTION_NORTH*2+0](RCA_data_to_south1[i][j][k]);    //***0 1 inverse
-			t[i][j][k]->RCA_data_in[DIRECTION_NORTH*2+1](RCA_data_to_south0[i][j][k]);    //***0 1 inverse
-			t[i][j][k]->RCA_data_in[DIRECTION_EAST*2+0](RCA_data_to_west1[i+1][j][k]);    //***0 1 inverse
-			t[i][j][k]->RCA_data_in[DIRECTION_EAST*2+1](RCA_data_to_west0[i+1][j][k]);    //***0 1 inverse
-			t[i][j][k]->RCA_data_in[DIRECTION_SOUTH*2+0](RCA_data_to_north1[i][j+1][k]);    //***0 1 inverse
-			t[i][j][k]->RCA_data_in[DIRECTION_SOUTH*2+1](RCA_data_to_north0[i][j+1][k]);    //***0 1 inverse
-			t[i][j][k]->RCA_data_in[DIRECTION_WEST*2+0](RCA_data_to_east1[i][j][k]);    //***0 1 inverse
-			t[i][j][k]->RCA_data_in[DIRECTION_WEST*2+1](RCA_data_to_east0[i][j][k]);    //***0 1 inverse			
+			// t[i][j][k]->RCA_data_in[DIRECTION_NORTH*2+0](RCA_data_to_south1[i][j][k]);    //***0 1 inverse
+			// t[i][j][k]->RCA_data_in[DIRECTION_NORTH*2+1](RCA_data_to_south0[i][j][k]);    //***0 1 inverse
+			// t[i][j][k]->RCA_data_in[DIRECTION_EAST*2+0](RCA_data_to_west1[i+1][j][k]);    //***0 1 inverse
+			// t[i][j][k]->RCA_data_in[DIRECTION_EAST*2+1](RCA_data_to_west0[i+1][j][k]);    //***0 1 inverse
+			// t[i][j][k]->RCA_data_in[DIRECTION_SOUTH*2+0](RCA_data_to_north1[i][j+1][k]);    //***0 1 inverse
+			// t[i][j][k]->RCA_data_in[DIRECTION_SOUTH*2+1](RCA_data_to_north0[i][j+1][k]);    //***0 1 inverse
+			// t[i][j][k]->RCA_data_in[DIRECTION_WEST*2+0](RCA_data_to_east1[i][j][k]);    //***0 1 inverse
+			// t[i][j][k]->RCA_data_in[DIRECTION_WEST*2+1](RCA_data_to_east0[i][j][k]);    //***0 1 inverse			
 			
-			t[i][j][k]->monitor_out        [DIRECTION_NORTH] (RCA_to_north       [i  ][j  ][k  ]);
-			t[i][j][k]->monitor_out        [DIRECTION_EAST ] (RCA_to_east        [i+1][j  ][k  ]);
-			t[i][j][k]->monitor_out        [DIRECTION_SOUTH] (RCA_to_south       [i  ][j+1][k  ]);
-			t[i][j][k]->monitor_out        [DIRECTION_WEST ] (RCA_to_west        [i  ][j  ][k  ]);
-			t[i][j][k]->monitor_out        [DIRECTION_UP   ] (RCA_to_up          [i  ][j  ][k  ]);
-			t[i][j][k]->monitor_out        [DIRECTION_DOWN ] (RCA_to_down        [i  ][j  ][k+1]);
-			t[i][j][k]->monitor_in         [DIRECTION_NORTH] (RCA_to_south       [i  ][j  ][k  ]);
-			t[i][j][k]->monitor_in         [DIRECTION_EAST ] (RCA_to_west        [i+1][j  ][k  ]);
-			t[i][j][k]->monitor_in         [DIRECTION_SOUTH] (RCA_to_north       [i  ][j+1][k  ]);
-			t[i][j][k]->monitor_in         [DIRECTION_WEST ] (RCA_to_east        [i  ][j  ][k  ]);
-			t[i][j][k]->monitor_in         [DIRECTION_UP   ] (RCA_to_down        [i  ][j  ][k  ]);
-			t[i][j][k]->monitor_in         [DIRECTION_DOWN ] (RCA_to_up          [i  ][j  ][k+1]);
+			// t[i][j][k]->monitor_out        [DIRECTION_NORTH] (RCA_to_north       [i  ][j  ][k  ]);
+			// t[i][j][k]->monitor_out        [DIRECTION_EAST ] (RCA_to_east        [i+1][j  ][k  ]);
+			// t[i][j][k]->monitor_out        [DIRECTION_SOUTH] (RCA_to_south       [i  ][j+1][k  ]);
+			// t[i][j][k]->monitor_out        [DIRECTION_WEST ] (RCA_to_west        [i  ][j  ][k  ]);
+			// t[i][j][k]->monitor_out        [DIRECTION_UP   ] (RCA_to_up          [i  ][j  ][k  ]);
+			// t[i][j][k]->monitor_out        [DIRECTION_DOWN ] (RCA_to_down        [i  ][j  ][k+1]);
+			// t[i][j][k]->monitor_in         [DIRECTION_NORTH] (RCA_to_south       [i  ][j  ][k  ]);
+			// t[i][j][k]->monitor_in         [DIRECTION_EAST ] (RCA_to_west        [i+1][j  ][k  ]);
+			// t[i][j][k]->monitor_in         [DIRECTION_SOUTH] (RCA_to_north       [i  ][j+1][k  ]);
+			// t[i][j][k]->monitor_in         [DIRECTION_WEST ] (RCA_to_east        [i  ][j  ][k  ]);
+			// t[i][j][k]->monitor_in         [DIRECTION_UP   ] (RCA_to_down        [i  ][j  ][k  ]);
+			// t[i][j][k]->monitor_in         [DIRECTION_DOWN ] (RCA_to_up          [i  ][j  ][k+1]);
 			
 			// on/off ports in emergency mode
 			t[i][j][k]->on_off             [DIRECTION_NORTH] (on_off_to_north    [i  ][j  ][k  ]);
@@ -193,154 +196,154 @@ void NoximNoC::buildMesh()
 			
 			
 			// Thermal budget
-			t[i][j][k]->TB             [DIRECTION_NORTH] (TB_to_north    [i  ][j  ][k  ]);
-			t[i][j][k]->TB             [DIRECTION_EAST ] (TB_to_east     [i+1][j  ][k  ]);
-			t[i][j][k]->TB             [DIRECTION_SOUTH] (TB_to_south    [i  ][j+1][k  ]);
-			t[i][j][k]->TB             [DIRECTION_WEST ] (TB_to_west     [i  ][j  ][k  ]);
-			t[i][j][k]->TB             [DIRECTION_UP ]    (TB_to_up      [i  ][j  ][k  ]);
-			t[i][j][k]->TB             [DIRECTION_DOWN ] (TB_to_down    [i  ][j  ][k+1]);
+			// t[i][j][k]->TB             [DIRECTION_NORTH] (TB_to_north    [i  ][j  ][k  ]);
+			// t[i][j][k]->TB             [DIRECTION_EAST ] (TB_to_east     [i+1][j  ][k  ]);
+			// t[i][j][k]->TB             [DIRECTION_SOUTH] (TB_to_south    [i  ][j+1][k  ]);
+			// t[i][j][k]->TB             [DIRECTION_WEST ] (TB_to_west     [i  ][j  ][k  ]);
+			// t[i][j][k]->TB             [DIRECTION_UP ]    (TB_to_up      [i  ][j  ][k  ]);
+			// t[i][j][k]->TB             [DIRECTION_DOWN ] (TB_to_down    [i  ][j  ][k+1]);
 			
-			t[i][j][k]->TB_neighbor    [DIRECTION_NORTH] (TB_to_south    [i  ][j  ][k  ]);
-			t[i][j][k]->TB_neighbor    [DIRECTION_EAST ] (TB_to_west     [i+1][j  ][k  ]);
-			t[i][j][k]->TB_neighbor    [DIRECTION_SOUTH] (TB_to_north    [i  ][j+1][k  ]);
-			t[i][j][k]->TB_neighbor    [DIRECTION_WEST ] (TB_to_east     [i  ][j  ][k  ]);
-			t[i][j][k]->TB_neighbor    [DIRECTION_UP]    (TB_to_down     [i  ][j  ][k  ]);
-			t[i][j][k]->TB_neighbor    [DIRECTION_DOWN ] (TB_to_up       [i  ][j  ][k+1]);
+			// t[i][j][k]->TB_neighbor    [DIRECTION_NORTH] (TB_to_south    [i  ][j  ][k  ]);
+			// t[i][j][k]->TB_neighbor    [DIRECTION_EAST ] (TB_to_west     [i+1][j  ][k  ]);
+			// t[i][j][k]->TB_neighbor    [DIRECTION_SOUTH] (TB_to_north    [i  ][j+1][k  ]);
+			// t[i][j][k]->TB_neighbor    [DIRECTION_WEST ] (TB_to_east     [i  ][j  ][k  ]);
+			// t[i][j][k]->TB_neighbor    [DIRECTION_UP]    (TB_to_down     [i  ][j  ][k  ]);
+			// t[i][j][k]->TB_neighbor    [DIRECTION_DOWN ] (TB_to_up       [i  ][j  ][k+1]);
 		
-			// predict temp.
-                        t[i][j][k]->PDT             [DIRECTION_NORTH] (PDT_to_north    [i  ][j  ][k  ]);
-                        t[i][j][k]->PDT             [DIRECTION_EAST ] (PDT_to_east     [i+1][j  ][k  ]);
-                        t[i][j][k]->PDT             [DIRECTION_SOUTH] (PDT_to_south    [i  ][j+1][k  ]);
-                        t[i][j][k]->PDT             [DIRECTION_WEST ] (PDT_to_west     [i  ][j  ][k  ]);
-                        t[i][j][k]->PDT             [DIRECTION_UP ]   (PDT_to_up       [i  ][j  ][k  ]);
-                        t[i][j][k]->PDT             [DIRECTION_DOWN ] (PDT_to_down     [i  ][j  ][k+1]);
+			// // predict temp.
+			// t[i][j][k]->PDT             [DIRECTION_NORTH] (PDT_to_north    [i  ][j  ][k  ]);
+			// t[i][j][k]->PDT             [DIRECTION_EAST ] (PDT_to_east     [i+1][j  ][k  ]);
+			// t[i][j][k]->PDT             [DIRECTION_SOUTH] (PDT_to_south    [i  ][j+1][k  ]);
+			// t[i][j][k]->PDT             [DIRECTION_WEST ] (PDT_to_west     [i  ][j  ][k  ]);
+			// t[i][j][k]->PDT             [DIRECTION_UP ]   (PDT_to_up       [i  ][j  ][k  ]);
+			// t[i][j][k]->PDT             [DIRECTION_DOWN ] (PDT_to_down     [i  ][j  ][k+1]);
 
-                        t[i][j][k]->PDT_neighbor    [DIRECTION_NORTH] (PDT_to_south    [i  ][j  ][k  ]);
-                        t[i][j][k]->PDT_neighbor    [DIRECTION_EAST ] (PDT_to_west     [i+1][j  ][k  ]);
-                        t[i][j][k]->PDT_neighbor    [DIRECTION_SOUTH] (PDT_to_north    [i  ][j+1][k  ]);
-                        t[i][j][k]->PDT_neighbor    [DIRECTION_WEST ] (PDT_to_east     [i  ][j  ][k  ]);
-                        t[i][j][k]->PDT_neighbor    [DIRECTION_UP]    (PDT_to_down     [i  ][j  ][k  ]);
-                        t[i][j][k]->PDT_neighbor    [DIRECTION_DOWN ] (PDT_to_up       [i  ][j  ][k+1]);
+			// t[i][j][k]->PDT_neighbor    [DIRECTION_NORTH] (PDT_to_south    [i  ][j  ][k  ]);
+			// t[i][j][k]->PDT_neighbor    [DIRECTION_EAST ] (PDT_to_west     [i+1][j  ][k  ]);
+			// t[i][j][k]->PDT_neighbor    [DIRECTION_SOUTH] (PDT_to_north    [i  ][j+1][k  ]);
+			// t[i][j][k]->PDT_neighbor    [DIRECTION_WEST ] (PDT_to_east     [i  ][j  ][k  ]);
+			// t[i][j][k]->PDT_neighbor    [DIRECTION_UP]    (PDT_to_down     [i  ][j  ][k  ]);
+			// t[i][j][k]->PDT_neighbor    [DIRECTION_DOWN ] (PDT_to_up       [i  ][j  ][k+1]);
 	
-			//buffer information
-			t[i][j][k]->buf[0]             [DIRECTION_NORTH] (buf0_to_north    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[0]             [DIRECTION_EAST ] (buf0_to_east     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf[0]             [DIRECTION_SOUTH] (buf0_to_south    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf[0]             [DIRECTION_WEST ] (buf0_to_west     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[0]             [DIRECTION_UP ]   (buf0_to_up       [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[0]             [DIRECTION_DOWN ] (buf0_to_down     [i  ][j  ][k+1]);
+			// //buffer information
+			// t[i][j][k]->buf[0]             [DIRECTION_NORTH] (buf0_to_north    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[0]             [DIRECTION_EAST ] (buf0_to_east     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf[0]             [DIRECTION_SOUTH] (buf0_to_south    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf[0]             [DIRECTION_WEST ] (buf0_to_west     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[0]             [DIRECTION_UP ]   (buf0_to_up       [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[0]             [DIRECTION_DOWN ] (buf0_to_down     [i  ][j  ][k+1]);
 
-                        t[i][j][k]->buf_neighbor[0]    [DIRECTION_NORTH] (buf0_to_south    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[0]    [DIRECTION_EAST ] (buf0_to_west     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[0]    [DIRECTION_SOUTH] (buf0_to_north    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf_neighbor[0]    [DIRECTION_WEST ] (buf0_to_east     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[0]    [DIRECTION_UP]    (buf0_to_down     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[0]    [DIRECTION_DOWN ] (buf0_to_up       [i  ][j  ][k+1]);
+			// t[i][j][k]->buf_neighbor[0]    [DIRECTION_NORTH] (buf0_to_south    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[0]    [DIRECTION_EAST ] (buf0_to_west     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[0]    [DIRECTION_SOUTH] (buf0_to_north    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf_neighbor[0]    [DIRECTION_WEST ] (buf0_to_east     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[0]    [DIRECTION_UP]    (buf0_to_down     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[0]    [DIRECTION_DOWN ] (buf0_to_up       [i  ][j  ][k+1]);
 
-			//buffer information
-                        t[i][j][k]->buf[1]             [DIRECTION_NORTH] (buf1_to_north    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[1]             [DIRECTION_EAST ] (buf1_to_east     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf[1]             [DIRECTION_SOUTH] (buf1_to_south    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf[1]             [DIRECTION_WEST ] (buf1_to_west     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[1]             [DIRECTION_UP ]   (buf1_to_up       [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[1]             [DIRECTION_DOWN ] (buf1_to_down     [i  ][j  ][k+1]);
+			// //buffer information
+			// t[i][j][k]->buf[1]             [DIRECTION_NORTH] (buf1_to_north    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[1]             [DIRECTION_EAST ] (buf1_to_east     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf[1]             [DIRECTION_SOUTH] (buf1_to_south    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf[1]             [DIRECTION_WEST ] (buf1_to_west     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[1]             [DIRECTION_UP ]   (buf1_to_up       [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[1]             [DIRECTION_DOWN ] (buf1_to_down     [i  ][j  ][k+1]);
 
-                        t[i][j][k]->buf_neighbor[1]    [DIRECTION_NORTH] (buf1_to_south    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[1]    [DIRECTION_EAST ] (buf1_to_west     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[1]    [DIRECTION_SOUTH] (buf1_to_north    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf_neighbor[1]    [DIRECTION_WEST ] (buf1_to_east     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[1]    [DIRECTION_UP]    (buf1_to_down     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[1]    [DIRECTION_DOWN ] (buf1_to_up       [i  ][j  ][k+1]);
+			// t[i][j][k]->buf_neighbor[1]    [DIRECTION_NORTH] (buf1_to_south    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[1]    [DIRECTION_EAST ] (buf1_to_west     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[1]    [DIRECTION_SOUTH] (buf1_to_north    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf_neighbor[1]    [DIRECTION_WEST ] (buf1_to_east     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[1]    [DIRECTION_UP]    (buf1_to_down     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[1]    [DIRECTION_DOWN ] (buf1_to_up       [i  ][j  ][k+1]);
 
-			//buffer information
-                        t[i][j][k]->buf[2]             [DIRECTION_NORTH] (buf2_to_north    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[2]             [DIRECTION_EAST ] (buf2_to_east     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf[2]             [DIRECTION_SOUTH] (buf2_to_south    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf[2]             [DIRECTION_WEST ] (buf2_to_west     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[2]             [DIRECTION_UP ]   (buf2_to_up       [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[2]             [DIRECTION_DOWN ] (buf2_to_down     [i  ][j  ][k+1]);
+			// //buffer information
+			// t[i][j][k]->buf[2]             [DIRECTION_NORTH] (buf2_to_north    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[2]             [DIRECTION_EAST ] (buf2_to_east     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf[2]             [DIRECTION_SOUTH] (buf2_to_south    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf[2]             [DIRECTION_WEST ] (buf2_to_west     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[2]             [DIRECTION_UP ]   (buf2_to_up       [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[2]             [DIRECTION_DOWN ] (buf2_to_down     [i  ][j  ][k+1]);
 
-                        t[i][j][k]->buf_neighbor[2]    [DIRECTION_NORTH] (buf2_to_south    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[2]    [DIRECTION_EAST ] (buf2_to_west     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[2]    [DIRECTION_SOUTH] (buf2_to_north    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf_neighbor[2]    [DIRECTION_WEST ] (buf2_to_east     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[2]    [DIRECTION_UP]    (buf2_to_down     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[2]    [DIRECTION_DOWN ] (buf2_to_up       [i  ][j  ][k+1]);
+			// t[i][j][k]->buf_neighbor[2]    [DIRECTION_NORTH] (buf2_to_south    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[2]    [DIRECTION_EAST ] (buf2_to_west     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[2]    [DIRECTION_SOUTH] (buf2_to_north    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf_neighbor[2]    [DIRECTION_WEST ] (buf2_to_east     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[2]    [DIRECTION_UP]    (buf2_to_down     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[2]    [DIRECTION_DOWN ] (buf2_to_up       [i  ][j  ][k+1]);
 
-			//buffer information
-                        t[i][j][k]->buf[3]             [DIRECTION_NORTH] (buf3_to_north    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[3]             [DIRECTION_EAST ] (buf3_to_east     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf[3]             [DIRECTION_SOUTH] (buf3_to_south    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf[3]             [DIRECTION_WEST ] (buf3_to_west     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[3]             [DIRECTION_UP ]   (buf3_to_up       [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[3]             [DIRECTION_DOWN ] (buf3_to_down     [i  ][j  ][k+1]);
+			// //buffer information
+			// t[i][j][k]->buf[3]             [DIRECTION_NORTH] (buf3_to_north    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[3]             [DIRECTION_EAST ] (buf3_to_east     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf[3]             [DIRECTION_SOUTH] (buf3_to_south    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf[3]             [DIRECTION_WEST ] (buf3_to_west     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[3]             [DIRECTION_UP ]   (buf3_to_up       [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[3]             [DIRECTION_DOWN ] (buf3_to_down     [i  ][j  ][k+1]);
 
-                        t[i][j][k]->buf_neighbor[3]    [DIRECTION_NORTH] (buf3_to_south    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[3]    [DIRECTION_EAST ] (buf3_to_west     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[3]    [DIRECTION_SOUTH] (buf3_to_north    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf_neighbor[3]    [DIRECTION_WEST ] (buf3_to_east     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[3]    [DIRECTION_UP]    (buf3_to_down     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[3]    [DIRECTION_DOWN ] (buf3_to_up       [i  ][j  ][k+1]);
+			// t[i][j][k]->buf_neighbor[3]    [DIRECTION_NORTH] (buf3_to_south    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[3]    [DIRECTION_EAST ] (buf3_to_west     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[3]    [DIRECTION_SOUTH] (buf3_to_north    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf_neighbor[3]    [DIRECTION_WEST ] (buf3_to_east     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[3]    [DIRECTION_UP]    (buf3_to_down     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[3]    [DIRECTION_DOWN ] (buf3_to_up       [i  ][j  ][k+1]);
 
-			//buffer information
-                        t[i][j][k]->buf[4]             [DIRECTION_NORTH] (buf4_to_north    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[4]             [DIRECTION_EAST ] (buf4_to_east     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf[4]             [DIRECTION_SOUTH] (buf4_to_south    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf[4]             [DIRECTION_WEST ] (buf4_to_west     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[4]             [DIRECTION_UP ]   (buf4_to_up       [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[4]             [DIRECTION_DOWN ] (buf4_to_down     [i  ][j  ][k+1]);
+			// //buffer information
+			// t[i][j][k]->buf[4]             [DIRECTION_NORTH] (buf4_to_north    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[4]             [DIRECTION_EAST ] (buf4_to_east     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf[4]             [DIRECTION_SOUTH] (buf4_to_south    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf[4]             [DIRECTION_WEST ] (buf4_to_west     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[4]             [DIRECTION_UP ]   (buf4_to_up       [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[4]             [DIRECTION_DOWN ] (buf4_to_down     [i  ][j  ][k+1]);
 
-                        t[i][j][k]->buf_neighbor[4]    [DIRECTION_NORTH] (buf4_to_south    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[4]    [DIRECTION_EAST ] (buf4_to_west     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[4]    [DIRECTION_SOUTH] (buf4_to_north    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf_neighbor[4]    [DIRECTION_WEST ] (buf4_to_east     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[4]    [DIRECTION_UP]    (buf4_to_down     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[4]    [DIRECTION_DOWN ] (buf4_to_up       [i  ][j  ][k+1]);
+			// t[i][j][k]->buf_neighbor[4]    [DIRECTION_NORTH] (buf4_to_south    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[4]    [DIRECTION_EAST ] (buf4_to_west     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[4]    [DIRECTION_SOUTH] (buf4_to_north    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf_neighbor[4]    [DIRECTION_WEST ] (buf4_to_east     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[4]    [DIRECTION_UP]    (buf4_to_down     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[4]    [DIRECTION_DOWN ] (buf4_to_up       [i  ][j  ][k+1]);
 
-			//buffer information
-                        t[i][j][k]->buf[5]             [DIRECTION_NORTH] (buf5_to_north    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[5]             [DIRECTION_EAST ] (buf5_to_east     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf[5]             [DIRECTION_SOUTH] (buf5_to_south    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf[5]             [DIRECTION_WEST ] (buf5_to_west     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[5]             [DIRECTION_UP ]   (buf5_to_up       [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[5]             [DIRECTION_DOWN ] (buf5_to_down     [i  ][j  ][k+1]);
+			// //buffer information
+			// t[i][j][k]->buf[5]             [DIRECTION_NORTH] (buf5_to_north    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[5]             [DIRECTION_EAST ] (buf5_to_east     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf[5]             [DIRECTION_SOUTH] (buf5_to_south    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf[5]             [DIRECTION_WEST ] (buf5_to_west     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[5]             [DIRECTION_UP ]   (buf5_to_up       [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[5]             [DIRECTION_DOWN ] (buf5_to_down     [i  ][j  ][k+1]);
 
-                        t[i][j][k]->buf_neighbor[5]    [DIRECTION_NORTH] (buf5_to_south    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[5]    [DIRECTION_EAST ] (buf5_to_west     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[5]    [DIRECTION_SOUTH] (buf5_to_north    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf_neighbor[5]    [DIRECTION_WEST ] (buf5_to_east     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[5]    [DIRECTION_UP]    (buf5_to_down     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[5]    [DIRECTION_DOWN ] (buf5_to_up       [i  ][j  ][k+1]);
+			// t[i][j][k]->buf_neighbor[5]    [DIRECTION_NORTH] (buf5_to_south    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[5]    [DIRECTION_EAST ] (buf5_to_west     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[5]    [DIRECTION_SOUTH] (buf5_to_north    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf_neighbor[5]    [DIRECTION_WEST ] (buf5_to_east     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[5]    [DIRECTION_UP]    (buf5_to_down     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[5]    [DIRECTION_DOWN ] (buf5_to_up       [i  ][j  ][k+1]);
 
-			//buffer information
-                        t[i][j][k]->buf[6]             [DIRECTION_NORTH] (buf6_to_north    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[6]             [DIRECTION_EAST ] (buf6_to_east     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf[6]             [DIRECTION_SOUTH] (buf6_to_south    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf[6]             [DIRECTION_WEST ] (buf6_to_west     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[6]             [DIRECTION_UP ]   (buf6_to_up       [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[6]             [DIRECTION_DOWN ] (buf6_to_down     [i  ][j  ][k+1]);
+			// //buffer information
+			// t[i][j][k]->buf[6]             [DIRECTION_NORTH] (buf6_to_north    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[6]             [DIRECTION_EAST ] (buf6_to_east     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf[6]             [DIRECTION_SOUTH] (buf6_to_south    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf[6]             [DIRECTION_WEST ] (buf6_to_west     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[6]             [DIRECTION_UP ]   (buf6_to_up       [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[6]             [DIRECTION_DOWN ] (buf6_to_down     [i  ][j  ][k+1]);
 
-                        t[i][j][k]->buf_neighbor[6]    [DIRECTION_NORTH] (buf6_to_south    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[6]    [DIRECTION_EAST ] (buf6_to_west     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[6]    [DIRECTION_SOUTH] (buf6_to_north    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf_neighbor[6]    [DIRECTION_WEST ] (buf6_to_east     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[6]    [DIRECTION_UP]    (buf6_to_down     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[6]    [DIRECTION_DOWN ] (buf6_to_up       [i  ][j  ][k+1]);
+			// t[i][j][k]->buf_neighbor[6]    [DIRECTION_NORTH] (buf6_to_south    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[6]    [DIRECTION_EAST ] (buf6_to_west     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[6]    [DIRECTION_SOUTH] (buf6_to_north    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf_neighbor[6]    [DIRECTION_WEST ] (buf6_to_east     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[6]    [DIRECTION_UP]    (buf6_to_down     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[6]    [DIRECTION_DOWN ] (buf6_to_up       [i  ][j  ][k+1]);
 
-			//buffer information
-                        t[i][j][k]->buf[7]             [DIRECTION_NORTH] (buf7_to_north    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[7]             [DIRECTION_EAST ] (buf7_to_east     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf[7]             [DIRECTION_SOUTH] (buf7_to_south    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf[7]             [DIRECTION_WEST ] (buf7_to_west     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[7]             [DIRECTION_UP ]   (buf7_to_up       [i  ][j  ][k  ]);
-                        t[i][j][k]->buf[7]             [DIRECTION_DOWN ] (buf7_to_down     [i  ][j  ][k+1]);
+			// //buffer information
+			// t[i][j][k]->buf[7]             [DIRECTION_NORTH] (buf7_to_north    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[7]             [DIRECTION_EAST ] (buf7_to_east     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf[7]             [DIRECTION_SOUTH] (buf7_to_south    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf[7]             [DIRECTION_WEST ] (buf7_to_west     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[7]             [DIRECTION_UP ]   (buf7_to_up       [i  ][j  ][k  ]);
+			// t[i][j][k]->buf[7]             [DIRECTION_DOWN ] (buf7_to_down     [i  ][j  ][k+1]);
 
-                        t[i][j][k]->buf_neighbor[7]    [DIRECTION_NORTH] (buf7_to_south    [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[7]    [DIRECTION_EAST ] (buf7_to_west     [i+1][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[7]    [DIRECTION_SOUTH] (buf7_to_north    [i  ][j+1][k  ]);
-                        t[i][j][k]->buf_neighbor[7]    [DIRECTION_WEST ] (buf7_to_east     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[7]    [DIRECTION_UP]    (buf7_to_down     [i  ][j  ][k  ]);
-                        t[i][j][k]->buf_neighbor[7]    [DIRECTION_DOWN ] (buf7_to_up       [i  ][j  ][k+1]);
+			// t[i][j][k]->buf_neighbor[7]    [DIRECTION_NORTH] (buf7_to_south    [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[7]    [DIRECTION_EAST ] (buf7_to_west     [i+1][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[7]    [DIRECTION_SOUTH] (buf7_to_north    [i  ][j+1][k  ]);
+			// t[i][j][k]->buf_neighbor[7]    [DIRECTION_WEST ] (buf7_to_east     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[7]    [DIRECTION_UP]    (buf7_to_down     [i  ][j  ][k  ]);
+			// t[i][j][k]->buf_neighbor[7]    [DIRECTION_DOWN ] (buf7_to_up       [i  ][j  ][k+1]);
 
 			//NoximVlink 
 			if( k < NoximGlobalParams::mesh_dim_z - 1){
@@ -383,51 +386,51 @@ void NoximNoC::buildMesh()
 		free_slots_to_south[i][0][k].write(NOT_VALID);
 		free_slots_to_north[i][j][k].write(NOT_VALID);
     
-		RCA_to_south       [i][0][k].write(0);
-		RCA_to_north       [i][j][k].write(0);
+		// RCA_to_south       [i][0][k].write(0);
+		// RCA_to_north       [i][j][k].write(0);
     
-		// RCA Derek
-		RCA_data_to_south0[i][0][k].write(0);
-		RCA_data_to_south1[i][0][k].write(0);
-		RCA_data_to_north0[i][NoximGlobalParams::mesh_dim_y][k].write(0);
-		RCA_data_to_north1[i][NoximGlobalParams::mesh_dim_y][k].write(0);					
+		// // RCA Derek
+		// RCA_data_to_south0[i][0][k].write(0);
+		// RCA_data_to_south1[i][0][k].write(0);
+		// RCA_data_to_north0[i][NoximGlobalParams::mesh_dim_y][k].write(0);
+		// RCA_data_to_north1[i][NoximGlobalParams::mesh_dim_y][k].write(0);					
 					
 	
 		on_off_to_south    [i][0][k].write(NOT_VALID);
 		on_off_to_north    [i][j][k].write(NOT_VALID);
 		
-		TB_to_south    [i][0][k].write(NOT_VALID);
-		TB_to_north    [i][j][k].write(NOT_VALID);
+		// TB_to_south    [i][0][k].write(NOT_VALID);
+		// TB_to_north    [i][j][k].write(NOT_VALID);
 
-		buf0_to_south    [i][0][k].write(NOT_VALID); 
-                buf0_to_north    [i][j][k].write(NOT_VALID);
+		// buf0_to_south    [i][0][k].write(NOT_VALID); 
+        //         buf0_to_north    [i][j][k].write(NOT_VALID);
 
-		buf1_to_south    [i][0][k].write(NOT_VALID);
-                buf1_to_north    [i][j][k].write(NOT_VALID);
+		// buf1_to_south    [i][0][k].write(NOT_VALID);
+        //         buf1_to_north    [i][j][k].write(NOT_VALID);
 
-		buf2_to_south    [i][0][k].write(NOT_VALID);
-                buf2_to_north    [i][j][k].write(NOT_VALID);
+		// buf2_to_south    [i][0][k].write(NOT_VALID);
+        //         buf2_to_north    [i][j][k].write(NOT_VALID);
 
-		buf3_to_south    [i][0][k].write(NOT_VALID);
-                buf3_to_north    [i][j][k].write(NOT_VALID);
+		// buf3_to_south    [i][0][k].write(NOT_VALID);
+        //         buf3_to_north    [i][j][k].write(NOT_VALID);
 
-		buf4_to_south    [i][0][k].write(NOT_VALID);
-                buf4_to_north    [i][j][k].write(NOT_VALID);
+		// buf4_to_south    [i][0][k].write(NOT_VALID);
+        //         buf4_to_north    [i][j][k].write(NOT_VALID);
 
-		buf5_to_south    [i][0][k].write(NOT_VALID);
-                buf5_to_north    [i][j][k].write(NOT_VALID);
+		// buf5_to_south    [i][0][k].write(NOT_VALID);
+        //         buf5_to_north    [i][j][k].write(NOT_VALID);
 
-		buf6_to_south    [i][0][k].write(NOT_VALID);
-                buf6_to_north    [i][j][k].write(NOT_VALID);
+		// buf6_to_south    [i][0][k].write(NOT_VALID);
+        //         buf6_to_north    [i][j][k].write(NOT_VALID);
 
-		buf7_to_south    [i][0][k].write(NOT_VALID);
-                buf7_to_north    [i][j][k].write(NOT_VALID);
+		// buf7_to_south    [i][0][k].write(NOT_VALID);
+        //         buf7_to_north    [i][j][k].write(NOT_VALID);
 
-		PDT_to_south    [i][0][k].write(100);
-                PDT_to_north    [i][j][k].write(100);
+		// PDT_to_south    [i][0][k].write(100);
+        //         PDT_to_north    [i][j][k].write(100);
     
-		NoP_data_to_south  [i][0][k].write(tmp_NoP);
-		NoP_data_to_north  [i][j][k].write(tmp_NoP);
+		// NoP_data_to_south  [i][0][k].write(tmp_NoP);
+		// NoP_data_to_north  [i][j][k].write(tmp_NoP);
 		}
     }
 	for( j=0; j<=NoximGlobalParams::mesh_dim_y; j++)
@@ -442,49 +445,49 @@ void NoximNoC::buildMesh()
 			free_slots_to_west[i][j][k].write(NOT_VALID);
 	
 			// RCA 
-			RCA_data_to_east0[0][j][k].write(0);
-			RCA_data_to_east1[0][j][k].write(0);
-			RCA_data_to_west0[NoximGlobalParams::mesh_dim_x][j][k].write(0);
-			RCA_data_to_west1[NoximGlobalParams::mesh_dim_x][j][k].write(0);					
+			// RCA_data_to_east0[0][j][k].write(0);
+			// RCA_data_to_east1[0][j][k].write(0);
+			// RCA_data_to_west0[NoximGlobalParams::mesh_dim_x][j][k].write(0);
+			// RCA_data_to_west1[NoximGlobalParams::mesh_dim_x][j][k].write(0);					
 					
-			RCA_to_east       [0][j][k].write(0);
-			RCA_to_west       [i][j][k].write(0);
+			// RCA_to_east       [0][j][k].write(0);
+			// RCA_to_west       [i][j][k].write(0);
 
 			on_off_to_east    [0][j][k].write(NOT_VALID);
 			on_off_to_west    [i][j][k].write(NOT_VALID);
 			
-			TB_to_east    [0][j][k].write(NOT_VALID);
-			TB_to_west    [i][j][k].write(NOT_VALID);
+			// TB_to_east    [0][j][k].write(NOT_VALID);
+			// TB_to_west    [i][j][k].write(NOT_VALID);
 
-			buf0_to_east    [0][j][k].write(NOT_VALID);
-                        buf0_to_west    [i][j][k].write(NOT_VALID);
+			// buf0_to_east    [0][j][k].write(NOT_VALID);
+            //             buf0_to_west    [i][j][k].write(NOT_VALID);
 
-			buf1_to_east    [0][j][k].write(NOT_VALID);
-                        buf1_to_west    [i][j][k].write(NOT_VALID);
+			// buf1_to_east    [0][j][k].write(NOT_VALID);
+            //             buf1_to_west    [i][j][k].write(NOT_VALID);
 
-			buf2_to_east    [0][j][k].write(NOT_VALID);
-                        buf2_to_west    [i][j][k].write(NOT_VALID);
+			// buf2_to_east    [0][j][k].write(NOT_VALID);
+            //             buf2_to_west    [i][j][k].write(NOT_VALID);
 
-			buf3_to_east    [0][j][k].write(NOT_VALID);
-                        buf3_to_west    [i][j][k].write(NOT_VALID);
+			// buf3_to_east    [0][j][k].write(NOT_VALID);
+            //             buf3_to_west    [i][j][k].write(NOT_VALID);
 
-			buf4_to_east    [0][j][k].write(NOT_VALID);
-                        buf4_to_west    [i][j][k].write(NOT_VALID);
+			// buf4_to_east    [0][j][k].write(NOT_VALID);
+            //             buf4_to_west    [i][j][k].write(NOT_VALID);
 
-			buf5_to_east    [0][j][k].write(NOT_VALID);
-                        buf5_to_west    [i][j][k].write(NOT_VALID);
+			// buf5_to_east    [0][j][k].write(NOT_VALID);
+            //             buf5_to_west    [i][j][k].write(NOT_VALID);
 
-			buf6_to_east    [0][j][k].write(NOT_VALID);
-                        buf6_to_west    [i][j][k].write(NOT_VALID);
+			// buf6_to_east    [0][j][k].write(NOT_VALID);
+            //             buf6_to_west    [i][j][k].write(NOT_VALID);
 
-			buf7_to_east    [0][j][k].write(NOT_VALID);
-                        buf7_to_west    [i][j][k].write(NOT_VALID);
+			// buf7_to_east    [0][j][k].write(NOT_VALID);
+            //             buf7_to_west    [i][j][k].write(NOT_VALID);
 
-			PDT_to_east    [0][j][k].write(100);
-                        PDT_to_west    [i][j][k].write(100);
+			// PDT_to_east    [0][j][k].write(100);
+            //             PDT_to_west    [i][j][k].write(100);
 
-			NoP_data_to_east  [0][j][k].write(tmp_NoP);
-			NoP_data_to_west  [i][j][k].write(tmp_NoP);
+			// NoP_data_to_east  [0][j][k].write(tmp_NoP);
+			// NoP_data_to_west  [i][j][k].write(tmp_NoP);
 	}
 	for( i=0; i<=NoximGlobalParams::mesh_dim_x; i++){
 	for( j=0; j<=NoximGlobalParams::mesh_dim_y; j++){
@@ -497,46 +500,47 @@ void NoximNoC::buildMesh()
 		free_slots_to_down[i][j][0].write(NOT_VALID);
 		free_slots_to_up  [i][j][k].write(NOT_VALID);
     
-		RCA_to_down       [i][j][0].write(0);
-		RCA_to_up         [i][j][k].write(0);
+		// RCA_to_down       [i][j][0].write(0);
+		// RCA_to_up         [i][j][k].write(0);
     
-		NoP_data_to_down  [i][j][0].write(tmp_NoP);
-		NoP_data_to_up    [i][j][k].write(tmp_NoP);
+		// NoP_data_to_down  [i][j][0].write(tmp_NoP);
+		// NoP_data_to_up    [i][j][k].write(tmp_NoP);
 		
 		on_off_to_down    [i][j][0].write(NOT_VALID);
 		on_off_to_up    [i][j][k].write(NOT_VALID);
 
-		TB_to_down    [i][j][0].write(NOT_VALID);
-		TB_to_up    [i][j][k].write(NOT_VALID);
+		// TB_to_down    [i][j][0].write(NOT_VALID);
+		// TB_to_up    [i][j][k].write(NOT_VALID);
 
-		buf0_to_down    [i][j][0].write(NOT_VALID);
-                buf0_to_up    [i][j][k].write(NOT_VALID);
+		// buf0_to_down    [i][j][0].write(NOT_VALID);
+        //         buf0_to_up    [i][j][k].write(NOT_VALID);
 
-		buf1_to_down    [i][j][0].write(NOT_VALID);
-                buf1_to_up    [i][j][k].write(NOT_VALID);
+		// buf1_to_down    [i][j][0].write(NOT_VALID);
+        //         buf1_to_up    [i][j][k].write(NOT_VALID);
 
-		buf2_to_down    [i][j][0].write(NOT_VALID);
-                buf2_to_up    [i][j][k].write(NOT_VALID);
+		// buf2_to_down    [i][j][0].write(NOT_VALID);
+        //         buf2_to_up    [i][j][k].write(NOT_VALID);
 
-		buf3_to_down    [i][j][0].write(NOT_VALID);
-                buf3_to_up    [i][j][k].write(NOT_VALID);
+		// buf3_to_down    [i][j][0].write(NOT_VALID);
+        //         buf3_to_up    [i][j][k].write(NOT_VALID);
 
-		buf4_to_down    [i][j][0].write(NOT_VALID);
-                buf4_to_up    [i][j][k].write(NOT_VALID);
+		// buf4_to_down    [i][j][0].write(NOT_VALID);
+        //         buf4_to_up    [i][j][k].write(NOT_VALID);
 
-		buf5_to_down    [i][j][0].write(NOT_VALID);
-                buf5_to_up    [i][j][k].write(NOT_VALID);
+		// buf5_to_down    [i][j][0].write(NOT_VALID);
+        //         buf5_to_up    [i][j][k].write(NOT_VALID);
 
-		buf6_to_down    [i][j][0].write(NOT_VALID);
-                buf6_to_up    [i][j][k].write(NOT_VALID);
+		// buf6_to_down    [i][j][0].write(NOT_VALID);
+        //         buf6_to_up    [i][j][k].write(NOT_VALID);
 
-		buf7_to_down    [i][j][0].write(NOT_VALID);
-                buf7_to_up    [i][j][k].write(NOT_VALID);
+		// buf7_to_down    [i][j][0].write(NOT_VALID);
+        //         buf7_to_up    [i][j][k].write(NOT_VALID);
 	
-		PDT_to_down    [i][j][0].write(100);
-                PDT_to_up    [i][j][k].write(100);
+		// PDT_to_down    [i][j][0].write(100);
+        //         PDT_to_up    [i][j][k].write(100);
 		}
     }
+
     // invalidate reservation table entries for non-exhistent channels
  	for( i=0; i<NoximGlobalParams::mesh_dim_x; i++)
 	for( k=0; k<NoximGlobalParams::mesh_dim_z; k++){
@@ -551,18 +555,18 @@ void NoximNoC::buildMesh()
 		t[i-1][j][k]->r->reservation_table.invalidate(DIRECTION_EAST);
 	}   
 	
-	for(int x=0; x < NoximGlobalParams::mesh_dim_x; x++)
-	for(int y=0; y < NoximGlobalParams::mesh_dim_y; y++)
-	for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++){
-		t[x][y][z]->vertical_free_slot_out(vertical_free_slot[x][y][z]);
-		for( int i=0; i < NoximGlobalParams::mesh_dim_z; i++ )
-			t[x][y][z]->vertical_free_slot_in[i]( vertical_free_slot[x][y][i] );
-	}
+	// for(int x=0; x < NoximGlobalParams::mesh_dim_x; x++)
+	// for(int y=0; y < NoximGlobalParams::mesh_dim_y; y++)
+	// for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++){
+	// 	t[x][y][z]->vertical_free_slot_out(vertical_free_slot[x][y][z]);
+	// 	for( int i=0; i < NoximGlobalParams::mesh_dim_z; i++ )
+	// 		t[x][y][z]->vertical_free_slot_in[i]( vertical_free_slot[x][y][i] );
+	// }
 	
 	// Initial emergency mode 
 	if(NoximGlobalParams::throt_type == THROT_TEST){
-			cout<<"building throt sest!"<<endl;
-			_throt_case_setting(NoximGlobalParams::dynamic_throt_case);
+		cout<<"building throt sest!"<<endl;
+		_throt_case_setting(NoximGlobalParams::dynamic_throt_case);
 	}
 	else{
 		for (int k=0; k<NoximGlobalParams::mesh_dim_z; k++)
@@ -572,6 +576,7 @@ void NoximNoC::buildMesh()
 			_setNormal(i,j,k);		
 		}
 	}
+
 	int non_beltway_layer,non_throt_layer;
 	int col_max,col_min,row_max,row_min;
 	findNonXLayer(non_throt_layer,non_beltway_layer);
@@ -595,24 +600,25 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 			t[i][j][k]->r->stats.power.resetTransientPwr();
 			t[i][j][k]->r->stats.temperature = INIT_TEMP - 273.15;
 			t[i][j][k]->r->stats.pre_temperature1 = INIT_TEMP - 273.15;
-			MTTT[i][j][k] = 10;
+			//MTTT[i][j][k] = 10;
 			traffic[i][j][k] = 0;
 		}
 		_emergency = false;
 		_clean     = true;
 	/*	if(!mkdir("results/Traffic",0777)) cout<<"Making new directory results/Hist"<<endl;
-                string filename;
-                filename = "results/Traffic/Traffic_analysis";
-                filename = MarkFileName( filename );
-	*/}
+		string filename;
+		filename = "results/Traffic/Traffic_analysis";
+		filename = MarkFileName( filename );
+	*/
+	}
 	else{
 		int CurrentCycle    = getCurrentCycleNum();
 		int CurrentCycleMod = (getCurrentCycleNum() % (int) (TEMP_REPORT_PERIOD));
 		if(  CurrentCycleMod == ((int) (TEMP_REPORT_PERIOD) - NoximGlobalParams::clean_stage_time)){
 			cout<<"*****setCleanStage****"<<endl;
-                        TransientLog();
+            //TransientLog();
 			setCleanStage();
-			num_pkt = 7168800;
+			//num_pkt = 7168800;
 		}
 		//cout<<"CurrentCycle:"<<CurrentCycle<<"\r"<<flush;
 		if( CurrentCycleMod == 0 ){
@@ -627,7 +633,10 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 				HS_interface->Temperature_calc(instPowerTrace, TemperatureTrace);
 				setTemperature();
 			}
-		
+			//check temperature, whether set emergency mode or not
+			EmergencyDecision();
+			cout<<"*****EndCleanStage*****"<<endl;		
+			TransientLog();
 		/*
 		// debug---------------------------------
 		// Derek 2012.10.16 
@@ -667,10 +676,6 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
                 //-----------------------------------------
 		*/
 	
-			//check temperature, whether set emergency mode or not
-			EmergencyDecision();
-			cout<<"*****EndCleanStage*****"<<endl;		
-			TransientLog();
 		}
 		if( CurrentCycle == NoximGlobalParams::simulation_time && NoximGlobalParams::cal_temp){ //Calculate steady state temp.
 			cout<<"Calculate SteadyTemp at "<<getCurrentCycleNum()<<endl;
@@ -726,14 +731,16 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 		} 
 	*/
 	if(CurrentCycleMod < ((int) (TEMP_REPORT_PERIOD) - NoximGlobalParams::clean_stage_time))
+	   
+	   /*
 	   if(getCurrentCycleNum() % 10000 == 0){
 
 		if(!mkdir("results/Traffic",0777))
 			cout<<"Making new directory results/Traffic"<<endl;
                 
 		string filename;
-               	filename = "results/Traffic/Traffic_analysis";
-               	filename = MarkFileName( filename );
+        filename = "results/Traffic/Traffic_analysis";
+        filename = MarkFileName( filename );
 		
 
 		fstream dout;
@@ -745,13 +752,13 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 
 		for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
 			dout<<"XY"<<o<<"=[\n";
-                for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
-                for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ ){
-			increment = t[m][n][o]->r->getRoutedFlits() - traffic[m][n][o];
-			dout<<increment<<"\t";
-		}
+			for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
+				for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ ){
+					increment = t[m][n][o]->r->getRoutedFlits() - traffic[m][n][o];
+					dout<<increment<<"\t";
+				}
 			dout<<"\n";
-		}
+			}
 			dout<<"]\n"<<"\n";
 		}
 		
@@ -759,59 +766,62 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 		dout<<"figure(1)"<<endl;
 
 		int temp = 1;
-                for( int k = 0 ; k < NoximGlobalParams::mesh_dim_z ; k++){
-                        dout<<"subplot("<<NoximGlobalParams::mesh_dim_z<<",1,"<<temp<<"), pcolor(XY"<<k<<"), axis off, caxis( color_range ), colormap(jet)"<<endl;
-                        temp += 1;
-                }
-                dout<<"set(gcf, 'PaperPosition', [1 1 7 30]);"<<endl;
-                dout<<"print(gcf,'-djpeg','-r0','"<<MarkFileName( string("") )<<".jpg')"<<endl;
+        for( int k = 0 ; k < NoximGlobalParams::mesh_dim_z ; k++){
+        	dout<<"subplot("<<NoximGlobalParams::mesh_dim_z<<",1,"<<temp<<"), pcolor(XY"<<k<<"), axis off, caxis( color_range ), colormap(jet)"<<endl;
+        	temp += 1;
+        }
+        dout<<"set(gcf, 'PaperPosition', [1 1 7 30]);"<<endl;
+        dout<<"print(gcf,'-djpeg','-r0','"<<MarkFileName( string("") )<<".jpg')"<<endl;
 		//dout.close();
 		
 		for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
-                for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
-                for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ )
+        for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
+        for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ )
 			traffic[m][n][o] = t[m][n][o]->r->getRoutedFlits();
 		}
 		}
 
-	   }
+	   } */
 
+		if(getCurrentCycleNum() % 100000 == 0){
+			int increment;
 
-	if(getCurrentCycleNum() % 100000 == 0){
+			traffic_analysis<<"temper sampling :"<<getCurrentCycleNum()<<"\n";
+			traffic_analysis<<"total traffic\n";
+			for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
+				traffic_analysis<<"XY"<<o<<" = ["<<"\n";
+				for( int n = NoximGlobalParams::mesh_dim_y -1 ; n>-1 ; n-- ){
+					for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ ){
+						increment = t[m][n][o]->r->getRoutedFlits() - traffic[m][n][o];
+						traffic_analysis<<increment<<"\t";
+					}
+						
+					traffic_analysis<<"\n";
+				}
+				traffic_analysis<<"]\n"<<"\n";
+			}
 
-		if(!mkdir("results/Traffic",0777))
-                        cout<<"Making new directory results/Traffic"<<endl;
+			traffic_analysis<<"color_range = [0 300000]"<<endl;
+			traffic_analysis<<"figure(1)"<<endl;
 
-		string filename;
-                filename = "results/Traffic/Traffic_analysis";
-                filename = MarkFileName( filename );
-		fstream dout;
-                dout.open(filename.c_str(),ios::out|ios::app);
+			int temp = 1;
+			for( int k = 0 ; k < NoximGlobalParams::mesh_dim_z ; k++){
+					traffic_analysis<<"subplot("<<NoximGlobalParams::mesh_dim_z<<",1,"<<temp<<"), pcolor(XY"<<k<<"), axis off, caxis( color_range ), colormap(jet)"<<endl;
+					temp += 1;
+			}
+			traffic_analysis<<"set(gcf, 'PaperPosition', [1 1 7 30]);"<<endl;
+			traffic_analysis<<"print(gcf,'-djpeg','-r0','"<<MarkFileName( string("") )<<".jpg')"<<endl;
 
-		dout<<"temper sampling :"<<getCurrentCycleNum()<<"\n";
-		dout<<"total traffic\n";
-		for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
-			dout<<"XY"<<o<<" = ["<<"\n";
-                for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
-                for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ )
-                        dout<<traffic[m][n][o]<<"\t";
-		dout<<"\n";
-                }
-		dout<<"]\n"<<"\n";
-                }
+			for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
+			for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
+			for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ )
+				traffic[m][n][o] = t[m][n][o]->r->getRoutedFlits();
+			}
+			}
 
-		dout<<"color_range = [0 300000]"<<endl;
-                dout<<"figure(1)"<<endl;
-
-                int temp = 1;
-                for( int k = 0 ; k < NoximGlobalParams::mesh_dim_z ; k++){
-                        dout<<"subplot("<<NoximGlobalParams::mesh_dim_z<<",1,"<<temp<<"), pcolor(XY"<<k<<"), axis off, caxis( color_range ), colormap(jet)"<<endl;
-                        temp += 1;
-                }
-                dout<<"set(gcf, 'PaperPosition', [1 1 7 30]);"<<endl;
-                dout<<"print(gcf,'-djpeg','-r0','"<<MarkFileName( string("") )<<".jpg')"<<endl;
-
-	}
+		}
+	
+	
 	}      
 }
 
@@ -880,11 +890,11 @@ void NoximNoC::setTemperature(){
 	int m, n, o;
     int idx = 0;
 	// temperature prediction-----
-	double current_temp; 
-	double current_delta_temp; 
-	double pre_delta_temp; 
-	double pre_current_temp;
-	double adjustment; 
+	// double current_temp; 
+	// double current_delta_temp; 
+	// double pre_delta_temp; 
+	// double pre_current_temp;
+	// double adjustment; 
 	//double consumption_rate[20][20][4];	
 	
 	
@@ -894,141 +904,144 @@ void NoximNoC::setTemperature(){
 	for(m=0; m < NoximGlobalParams::mesh_dim_x; m++) {
 		idx = xyz2Id( m, n, o);
 		//set tile temperature
-		t[m][n][o]->r->TBDB(consumption_rate[m][n][o]);
 		t[m][n][o]->r->stats.last_temperature = t[m][n][o]->r->stats.temperature;
 		t[m][n][o]->r->stats.temperature      = TemperatureTrace[3*idx];     
+
+		//t[m][n][o]->r->TBDB(consumption_rate[m][n][o]);
+
         //thermal budget
 		// temp_budget[m][n][o]            	  = TEMP_THRESHOLD - t[m][n][o]->r->stats.temperature; // Derek 2012.10.16 	
 		// if (temp_budget[m][n][o]<0)
 		// 	temp_budget[m][n][o] = 0;	
 		//thermal prediction
-		if(t[m][n][o]->r->stats.temperature > 85)
-		{
-			current_temp = t[m][n][o]->r->stats.temperature;
-			current_delta_temp = t[m][n][o]->r->stats.temperature - t[m][n][o]->r->stats.last_temperature;
 
-			if(current_delta_temp < 0){
-				pre_delta_temp = t[m][n][o]->r->stats.last_pre_temperature1 - t[m][n][o]->r->stats.last_temperature;
-				pre_current_temp = t[m][n][o]->r->stats.last_pre_temperature1;
-				adjustment = t[m][n][o]->r->stats.last_pre_temperature1 - current_temp;
+		// if(t[m][n][o]->r->stats.temperature > 85)
+		// {
+		// 	current_temp = t[m][n][o]->r->stats.temperature;
+		// 	current_delta_temp = t[m][n][o]->r->stats.temperature - t[m][n][o]->r->stats.last_temperature;
+
+		// 	if(current_delta_temp < 0){
+		// 		pre_delta_temp = t[m][n][o]->r->stats.last_pre_temperature1 - t[m][n][o]->r->stats.last_temperature;
+		// 		pre_current_temp = t[m][n][o]->r->stats.last_pre_temperature1;
+		// 		adjustment = t[m][n][o]->r->stats.last_pre_temperature1 - current_temp;
 				
-				t[m][n][o]->r->stats.pre_temperature1 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) - adjustment;
-				//if(TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1>0)
-				consumption_rate[m][n][o] = t[m][n][o]->r->stats.pre_temperature1 - t[m][n][o]->r->stats.temperature; // Jason
-				//else
-				//	temp_budget[m][n][o]=0;
-				/*t[m][n][o]->r->stats.pre_temperature2 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) - adjustment;
-				t[m][n][o]->r->stats.pre_temperature3 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
-				                                         pre_delta_temp* exp(-1.98*0.03) - adjustment;
-				t[m][n][o]->r->stats.pre_temperature4 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
-				                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) - adjustment;
-				t[m][n][o]->r->stats.pre_temperature5 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
-				                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) + 
-														 pre_delta_temp* exp(-1.98*0.05) - adjustment;
-				t[m][n][o]->r->stats.pre_temperature6 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
-				                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) + 
-														 pre_delta_temp* exp(-1.98*0.05) + pre_delta_temp* exp(-1.98*0.06) - adjustment;														 
-			*/
-			}
-			//else t[m][n][o]->r->stats.pre_temperature =  current_temp + current_delta_temp* exp(-2.95*0.01) + current_delta_temp* exp(-2.95*0.02) + current_delta_temp* exp(-2.95*0.03) + current_delta_temp*exp(-2.95*0.04) + current_delta_temp* exp(-2.95*0.05);
-			else{
-				t[m][n][o]->r->stats.pre_temperature1 =  current_temp + current_delta_temp* exp(-1.98*0.01);
-				//if(TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1>0)
-			        //	temp_budget[m][n][o]                  = TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1; // Jason
-				//else
-				//	temp_budget[m][n][o]=0;
-				consumption_rate[m][n][o] = t[m][n][o]->r->stats.pre_temperature1 - t[m][n][o]->r->stats.temperature;	
-				/*
-				t[m][n][o]->r->stats.pre_temperature2 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02);
-				t[m][n][o]->r->stats.pre_temperature3 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
-				                                         current_delta_temp* exp(-1.98*0.03);
-				t[m][n][o]->r->stats.pre_temperature4 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
-				                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04);
-				t[m][n][o]->r->stats.pre_temperature5 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
-				                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04) + 
-														 current_delta_temp* exp(-1.98*0.05);
-				t[m][n][o]->r->stats.pre_temperature6 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
-				                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04) + 
-														 current_delta_temp* exp(-1.98*0.05) + current_delta_temp* exp(-1.98*0.06);														 
-			*/
-			}
+		// 		t[m][n][o]->r->stats.pre_temperature1 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) - adjustment;
+		// 		//if(TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1>0)
+		// 		consumption_rate[m][n][o] = t[m][n][o]->r->stats.pre_temperature1 - t[m][n][o]->r->stats.temperature; // Jason
+		// 		//else
+		// 		//	temp_budget[m][n][o]=0;
+		// 		/*t[m][n][o]->r->stats.pre_temperature2 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) - adjustment;
+		// 		t[m][n][o]->r->stats.pre_temperature3 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
+		// 		                                         pre_delta_temp* exp(-1.98*0.03) - adjustment;
+		// 		t[m][n][o]->r->stats.pre_temperature4 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
+		// 		                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) - adjustment;
+		// 		t[m][n][o]->r->stats.pre_temperature5 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
+		// 		                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) + 
+		// 												 pre_delta_temp* exp(-1.98*0.05) - adjustment;
+		// 		t[m][n][o]->r->stats.pre_temperature6 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
+		// 		                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) + 
+		// 												 pre_delta_temp* exp(-1.98*0.05) + pre_delta_temp* exp(-1.98*0.06) - adjustment;														 
+		// 	*/
+		// 	}
+		// 	//else t[m][n][o]->r->stats.pre_temperature =  current_temp + current_delta_temp* exp(-2.95*0.01) + current_delta_temp* exp(-2.95*0.02) + current_delta_temp* exp(-2.95*0.03) + current_delta_temp*exp(-2.95*0.04) + current_delta_temp* exp(-2.95*0.05);
+		// 	else{
+		// 		t[m][n][o]->r->stats.pre_temperature1 =  current_temp + current_delta_temp* exp(-1.98*0.01);
+		// 		//if(TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1>0)
+		// 	        //	temp_budget[m][n][o]                  = TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1; // Jason
+		// 		//else
+		// 		//	temp_budget[m][n][o]=0;
+		// 		consumption_rate[m][n][o] = t[m][n][o]->r->stats.pre_temperature1 - t[m][n][o]->r->stats.temperature;	
+		// 		/*
+		// 		t[m][n][o]->r->stats.pre_temperature2 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02);
+		// 		t[m][n][o]->r->stats.pre_temperature3 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
+		// 		                                         current_delta_temp* exp(-1.98*0.03);
+		// 		t[m][n][o]->r->stats.pre_temperature4 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
+		// 		                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04);
+		// 		t[m][n][o]->r->stats.pre_temperature5 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
+		// 		                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04) + 
+		// 												 current_delta_temp* exp(-1.98*0.05);
+		// 		t[m][n][o]->r->stats.pre_temperature6 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
+		// 		                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04) + 
+		// 												 current_delta_temp* exp(-1.98*0.05) + current_delta_temp* exp(-1.98*0.06);														 
+		// 	*/
+		// 	}
 			
-			t[m][n][o]->r->stats.last_pre_temperature1 = t[m][n][o]->r->stats.pre_temperature1;
-			/*t[m][n][o]->r->stats.last_pre_temperature2 = t[m][n][o]->r->stats.pre_temperature2;
-			t[m][n][o]->r->stats.last_pre_temperature3 = t[m][n][o]->r->stats.pre_temperature3;
-			t[m][n][o]->r->stats.last_pre_temperature4 = t[m][n][o]->r->stats.pre_temperature4;
-			t[m][n][o]->r->stats.last_pre_temperature5 = t[m][n][o]->r->stats.pre_temperature5;
-			t[m][n][o]->r->stats.last_pre_temperature6 = t[m][n][o]->r->stats.pre_temperature6;		
-	        */
-		}
-		else
-		{
-			t[m][n][o]->r->stats.pre_temperature1 = t[m][n][o]->r->stats.temperature;
-			/*t[m][n][o]->r->stats.pre_temperature2 = t[m][n][o]->r->stats.temperature;
-			t[m][n][o]->r->stats.pre_temperature3 = t[m][n][o]->r->stats.temperature;
-			t[m][n][o]->r->stats.pre_temperature4 = t[m][n][o]->r->stats.temperature;
-			t[m][n][o]->r->stats.pre_temperature5 = t[m][n][o]->r->stats.temperature;
-			t[m][n][o]->r->stats.pre_temperature6 = t[m][n][o]->r->stats.temperature;	
-			*/	
-		}
+		// 	t[m][n][o]->r->stats.last_pre_temperature1 = t[m][n][o]->r->stats.pre_temperature1;
+		// 	/*t[m][n][o]->r->stats.last_pre_temperature2 = t[m][n][o]->r->stats.pre_temperature2;
+		// 	t[m][n][o]->r->stats.last_pre_temperature3 = t[m][n][o]->r->stats.pre_temperature3;
+		// 	t[m][n][o]->r->stats.last_pre_temperature4 = t[m][n][o]->r->stats.pre_temperature4;
+		// 	t[m][n][o]->r->stats.last_pre_temperature5 = t[m][n][o]->r->stats.pre_temperature5;
+		// 	t[m][n][o]->r->stats.last_pre_temperature6 = t[m][n][o]->r->stats.pre_temperature6;		
+	    //     */
+		// }
+		// else
+		// {
+		// 	t[m][n][o]->r->stats.pre_temperature1 = t[m][n][o]->r->stats.temperature;
+		// 	/*t[m][n][o]->r->stats.pre_temperature2 = t[m][n][o]->r->stats.temperature;
+		// 	t[m][n][o]->r->stats.pre_temperature3 = t[m][n][o]->r->stats.temperature;
+		// 	t[m][n][o]->r->stats.pre_temperature4 = t[m][n][o]->r->stats.temperature;
+		// 	t[m][n][o]->r->stats.pre_temperature5 = t[m][n][o]->r->stats.temperature;
+		// 	t[m][n][o]->r->stats.pre_temperature6 = t[m][n][o]->r->stats.temperature;	
+		// 	*/	
+		// }
 	}
 	
 	
 	// Derek 2012.12.10
 	// Thermal factor(location prone to be hot spot)
 
-	for(o=0; o < NoximGlobalParams::mesh_dim_z; o++){
-		thermal_factor[0][0][o]=1;   thermal_factor[1][0][o]=2;   thermal_factor[2][0][o]=3;   thermal_factor[3][0][o]=3;
-		thermal_factor[4][0][o]=3;   thermal_factor[5][0][o]=2;   thermal_factor[6][0][o]=2;   thermal_factor[7][0][o]=1;		
+	// for(o=0; o < NoximGlobalParams::mesh_dim_z; o++){
+	// 	thermal_factor[0][0][o]=1;   thermal_factor[1][0][o]=2;   thermal_factor[2][0][o]=3;   thermal_factor[3][0][o]=3;
+	// 	thermal_factor[4][0][o]=3;   thermal_factor[5][0][o]=2;   thermal_factor[6][0][o]=2;   thermal_factor[7][0][o]=1;		
 
-		thermal_factor[0][1][o]=2;   thermal_factor[1][1][o]=4;   thermal_factor[2][1][o]=5;   thermal_factor[3][1][o]=5;
-		thermal_factor[4][1][o]=5;   thermal_factor[5][1][o]=3;   thermal_factor[6][1][o]=2;   thermal_factor[7][1][o]=1;	
+	// 	thermal_factor[0][1][o]=2;   thermal_factor[1][1][o]=4;   thermal_factor[2][1][o]=5;   thermal_factor[3][1][o]=5;
+	// 	thermal_factor[4][1][o]=5;   thermal_factor[5][1][o]=3;   thermal_factor[6][1][o]=2;   thermal_factor[7][1][o]=1;	
 
-		thermal_factor[0][2][o]=3;   thermal_factor[1][2][o]=5;   thermal_factor[2][2][o]=6;   thermal_factor[3][2][o]=7;
-		thermal_factor[4][2][o]=6;   thermal_factor[5][2][o]=5;   thermal_factor[6][2][o]=3;   thermal_factor[7][2][o]=2;		
+	// 	thermal_factor[0][2][o]=3;   thermal_factor[1][2][o]=5;   thermal_factor[2][2][o]=6;   thermal_factor[3][2][o]=7;
+	// 	thermal_factor[4][2][o]=6;   thermal_factor[5][2][o]=5;   thermal_factor[6][2][o]=3;   thermal_factor[7][2][o]=2;		
 		
-		thermal_factor[0][3][o]=4;   thermal_factor[1][3][o]=6;   thermal_factor[2][3][o]=7;   thermal_factor[3][3][o]=8;
-		thermal_factor[4][3][o]=7;   thermal_factor[5][3][o]=6;   thermal_factor[6][3][o]=4;   thermal_factor[7][3][o]=2;		
+	// 	thermal_factor[0][3][o]=4;   thermal_factor[1][3][o]=6;   thermal_factor[2][3][o]=7;   thermal_factor[3][3][o]=8;
+	// 	thermal_factor[4][3][o]=7;   thermal_factor[5][3][o]=6;   thermal_factor[6][3][o]=4;   thermal_factor[7][3][o]=2;		
 
-		thermal_factor[0][4][o]=4;   thermal_factor[1][4][o]=6;   thermal_factor[2][4][o]=7;   thermal_factor[3][4][o]=8;
-		thermal_factor[4][4][o]=7;   thermal_factor[5][4][o]=6;   thermal_factor[6][4][o]=4;   thermal_factor[7][4][o]=2;		
+	// 	thermal_factor[0][4][o]=4;   thermal_factor[1][4][o]=6;   thermal_factor[2][4][o]=7;   thermal_factor[3][4][o]=8;
+	// 	thermal_factor[4][4][o]=7;   thermal_factor[5][4][o]=6;   thermal_factor[6][4][o]=4;   thermal_factor[7][4][o]=2;		
 		
-		thermal_factor[0][5][o]=3;   thermal_factor[1][5][o]=5;   thermal_factor[2][5][o]=6;   thermal_factor[3][5][o]=7;
-		thermal_factor[4][5][o]=6;   thermal_factor[5][5][o]=5;   thermal_factor[6][5][o]=3;   thermal_factor[7][5][o]=2;		
+	// 	thermal_factor[0][5][o]=3;   thermal_factor[1][5][o]=5;   thermal_factor[2][5][o]=6;   thermal_factor[3][5][o]=7;
+	// 	thermal_factor[4][5][o]=6;   thermal_factor[5][5][o]=5;   thermal_factor[6][5][o]=3;   thermal_factor[7][5][o]=2;		
 
-		thermal_factor[0][6][o]=2;   thermal_factor[1][6][o]=4;   thermal_factor[2][6][o]=5;   thermal_factor[3][6][o]=5;
-		thermal_factor[4][6][o]=5;   thermal_factor[5][6][o]=4;   thermal_factor[6][6][o]=2;   thermal_factor[7][6][o]=1;		
+	// 	thermal_factor[0][6][o]=2;   thermal_factor[1][6][o]=4;   thermal_factor[2][6][o]=5;   thermal_factor[3][6][o]=5;
+	// 	thermal_factor[4][6][o]=5;   thermal_factor[5][6][o]=4;   thermal_factor[6][6][o]=2;   thermal_factor[7][6][o]=1;		
 
-		thermal_factor[0][7][o]=1;   thermal_factor[1][7][o]=2;   thermal_factor[2][7][o]=3;   thermal_factor[3][7][o]=3;
-		thermal_factor[4][7][o]=3;   thermal_factor[5][7][o]=2;   thermal_factor[6][7][o]=2;   thermal_factor[7][7][o]=1;			
-	}
+	// 	thermal_factor[0][7][o]=1;   thermal_factor[1][7][o]=2;   thermal_factor[2][7][o]=3;   thermal_factor[3][7][o]=3;
+	// 	thermal_factor[4][7][o]=3;   thermal_factor[5][7][o]=2;   thermal_factor[6][7][o]=2;   thermal_factor[7][7][o]=1;			
+	// }
 
 	// Derek 2012.12.17
 	// Penalty Factor(decline largely when temperature close to limit)
 
-	for(o=0; o < NoximGlobalParams::mesh_dim_z; o++)
-	for(n=0; n < NoximGlobalParams::mesh_dim_y; n++) 
-	for(m=0; m < NoximGlobalParams::mesh_dim_x; m++) {	
-		if( (t[m][n][o]->r->stats.pre_temperature1)<90 )
-			penalty_factor[m][n][o]= 1- 0.1*(t[m][n][o]->r->stats.pre_temperature1-85);
-		else if((t[m][n][o]->r->stats.pre_temperature1)>=90 && (t[m][n][o]->r->stats.pre_temperature1)<95)
-			penalty_factor[m][n][o]= 0.5- 0.04*(t[m][n][o]->r->stats.pre_temperature1-90);
-		else if((t[m][n][o]->r->stats.pre_temperature1)>=95 && (t[m][n][o]->r->stats.pre_temperature1)<100)
-			penalty_factor[m][n][o]= 0.3- 0.06*(t[m][n][o]->r->stats.pre_temperature1-95);
-		else
-			penalty_factor[m][n][o]= 0;
-	}
+	// for(o=0; o < NoximGlobalParams::mesh_dim_z; o++)
+	// for(n=0; n < NoximGlobalParams::mesh_dim_y; n++) 
+	// for(m=0; m < NoximGlobalParams::mesh_dim_x; m++) {	
+	// 	if( (t[m][n][o]->r->stats.pre_temperature1)<90 )
+	// 		penalty_factor[m][n][o]= 1- 0.1*(t[m][n][o]->r->stats.pre_temperature1-85);
+	// 	else if((t[m][n][o]->r->stats.pre_temperature1)>=90 && (t[m][n][o]->r->stats.pre_temperature1)<95)
+	// 		penalty_factor[m][n][o]= 0.5- 0.04*(t[m][n][o]->r->stats.pre_temperature1-90);
+	// 	else if((t[m][n][o]->r->stats.pre_temperature1)>=95 && (t[m][n][o]->r->stats.pre_temperature1)<100)
+	// 		penalty_factor[m][n][o]= 0.3- 0.06*(t[m][n][o]->r->stats.pre_temperature1-95);
+	// 	else
+	// 		penalty_factor[m][n][o]= 0;
+	// }
 
 	
 	// Total Thermal Budget
-	for(o=0; o < NoximGlobalParams::mesh_dim_z; o++)
-	for(n=0; n < NoximGlobalParams::mesh_dim_y; n++) 
-	for(m=0; m < NoximGlobalParams::mesh_dim_x; m++) {	
-		if(consumption_rate[m][n][o]>0){
-		//	t[m][n][o]->r->TBDB(consumption_rate[m][n][o]);
-			MTTT[m][n][o] = (temp_budget[m][n][o]/**penalty_factor[m][n][o]*/)/consumption_rate[m][n][o];	
-		}
-	}
+	// for(o=0; o < NoximGlobalParams::mesh_dim_z; o++)
+	// for(n=0; n < NoximGlobalParams::mesh_dim_y; n++) 
+	// for(m=0; m < NoximGlobalParams::mesh_dim_x; m++) {	
+	// 	if(consumption_rate[m][n][o]>0){
+	// 	//	t[m][n][o]->r->TBDB(consumption_rate[m][n][o]);
+	// 		MTTT[m][n][o] = (temp_budget[m][n][o]/**penalty_factor[m][n][o]*/)/consumption_rate[m][n][o];	
+	// 	}
+	// }
 
 
 }
@@ -1207,6 +1220,53 @@ void NoximNoC::Vertical_MAX(bool& isEmergency){
 	Reconfiguration();
 }
 
+void NoximNoC::setCleanStage(){
+	cout<<getCurrentCycleNum()<<":Into Clean Stage"<<endl;
+	for(int z=0; z < NoximGlobalParams::mesh_dim_z ; z++ )//from top to down
+	for(int y=0; y < NoximGlobalParams::mesh_dim_y ; y++ ) 
+	for(int x=0; x < NoximGlobalParams::mesh_dim_x ; x++ ){
+		t[x][y][z]->pe->IntoCleanStage();
+		t[x][y][z]->pe->OutOfEmergency();
+		t[x][y][z]->r ->OutOfEmergency();
+		throttling[x][y][z]             = false;
+	}
+}
+
+void NoximNoC::EndCleanStage(){
+	cout<<getCurrentCycleNum()<<":Out of Clean Stage"<<endl;
+	for(int z=0; z < NoximGlobalParams::mesh_dim_z ; z++ )//from top to down
+	for(int y=0; y < NoximGlobalParams::mesh_dim_y ; y++ ) 
+	for(int x=0; x < NoximGlobalParams::mesh_dim_x ; x++ ){
+		t[x][y][z]->pe->OutOfCleanStage();
+	}
+}
+
+void NoximNoC::findNonXLayer(int &non_throt_layer, int &non_beltway_layer){
+	int m, n, layer;
+	bool index_throt = false,index_beltway = false;
+	non_throt_layer = 0,non_beltway_layer = 0;
+	for(layer=NoximGlobalParams::mesh_dim_z - 1 ; layer > -1 ; layer-- ){
+		for(n=0; n < NoximGlobalParams::mesh_dim_y; n++) 
+		for(m=0; m < NoximGlobalParams::mesh_dim_x; m++)
+			index_beltway |= beltway[m][n][layer];
+		if (index_beltway){
+			non_beltway_layer = layer + 1;
+			break;
+		}
+	}
+	for(layer = NoximGlobalParams::mesh_dim_z - 1 ; layer > -1 ; layer-- ){
+		for(n=0; n < NoximGlobalParams::mesh_dim_y; n++) 
+		for(m=0; m < NoximGlobalParams::mesh_dim_x; m++)
+			index_throt   |= throttling[m][n][layer];
+		if (index_throt){
+			non_throt_layer = layer + 1;
+			break;
+		}
+	}
+	assert( non_throt_layer > -1 && non_beltway_layer > -1 );
+}
+
+
 void NoximNoC::calROC(int &col_max, int &col_min, int &row_max, int &row_min,int non_beltway_layer){
 	int X_min = 0;
 	int X_max = NoximGlobalParams::mesh_dim_x - 1;
@@ -1261,55 +1321,11 @@ void NoximNoC::calROC(int &col_max, int &col_min, int &row_max, int &row_min,int
 	row_min = Y_min;
 	row_max = Y_max;
 }
-void NoximNoC::setCleanStage(){
-	cout<<getCurrentCycleNum()<<":Into Clean Stage"<<endl;
-	for(int z=0; z < NoximGlobalParams::mesh_dim_z ; z++ )//from top to down
-	for(int y=0; y < NoximGlobalParams::mesh_dim_y ; y++ ) 
-	for(int x=0; x < NoximGlobalParams::mesh_dim_x ; x++ ){
-		t[x][y][z]->pe->IntoCleanStage();
-		t[x][y][z]->pe->OutOfEmergency();
-		t[x][y][z]->r ->OutOfEmergency();
-		throttling[x][y][z]             = false;
-	}
-}
 
-void NoximNoC::EndCleanStage(){
-	cout<<getCurrentCycleNum()<<":Out of Clean Stage"<<endl;
-	for(int z=0; z < NoximGlobalParams::mesh_dim_z ; z++ )//from top to down
-	for(int y=0; y < NoximGlobalParams::mesh_dim_y ; y++ ) 
-	for(int x=0; x < NoximGlobalParams::mesh_dim_x ; x++ ){
-		t[x][y][z]->pe->OutOfCleanStage();
-	}
-}
-
-void NoximNoC::findNonXLayer(int &non_throt_layer, int &non_beltway_layer){
-	int m, n, layer;
-	bool index_throt = false,index_beltway = false;
-	non_throt_layer = 0,non_beltway_layer = 0;
-	for(layer=NoximGlobalParams::mesh_dim_z - 1 ; layer > -1 ; layer-- ){
-		for(n=0; n < NoximGlobalParams::mesh_dim_y; n++) 
-		for(m=0; m < NoximGlobalParams::mesh_dim_x; m++)
-			index_beltway |= beltway[m][n][layer];
-		if (index_beltway){
-			non_beltway_layer = layer + 1;
-			break;
-		}
-	}
-	for(layer = NoximGlobalParams::mesh_dim_z - 1 ; layer > -1 ; layer-- ){
-		for(n=0; n < NoximGlobalParams::mesh_dim_y; n++) 
-		for(m=0; m < NoximGlobalParams::mesh_dim_x; m++)
-			index_throt   |= throttling[m][n][layer];
-		if (index_throt){
-			non_throt_layer = layer + 1;
-			break;
-		}
-	}
-	assert( non_throt_layer > -1 && non_beltway_layer > -1 );
-}
 void NoximNoC::Reconfiguration(){
 	int non_beltway_layer,non_throt_layer;
 	int col_max,col_min,row_max,row_min;
-	findNonXLayer(non_throt_layer,non_beltway_layer);
+	findNonXLayer(non_throt_layer,non_beltway_layer); 
 	calROC(col_max,col_min,row_max,row_min,non_beltway_layer);
 	for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++ )
 	for(int y=0; y < NoximGlobalParams::mesh_dim_y; y++ ) 
@@ -1322,33 +1338,33 @@ bool NoximNoC::_equal(int x, int y, int z, int m, int n, int o){
 	return ( x == m )&&( y == n )&&( z == o );
 }
 
-bool NoximNoC::_CleanDone(){
-	bool clean = true;
-	for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++)
-	for(int y=0; y < NoximGlobalParams::mesh_dim_y; y++)
-	for(int x=0; x < NoximGlobalParams::mesh_dim_x; x++){
+// bool NoximNoC::_CleanDone(){
+// 	bool clean = true;
+// 	for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++)
+// 	for(int y=0; y < NoximGlobalParams::mesh_dim_y; y++)
+// 	for(int x=0; x < NoximGlobalParams::mesh_dim_x; x++){
 	
-		if( !t[x][y][z]->pe->flit_queue.empty() ){
-			cout<<"t["<<x<<"]["<<y<<"]["<<z<<"] pe flit_queue is not empty "<<t[x][y][z]->pe->flit_queue.front()<<endl;
-		}
-		if( !t[x][y][z]->pe->packet_queue.empty() ){
-			cout<<"t["<<x<<"]["<<y<<"]["<<z<<"] pe packet_queue is not empty "<<t[x][y][z]->pe->packet_queue.front().dst_id<<endl;
-		}
-		for(int d = 0; d < DIRECTIONS+1; d++){
-			if ( !(t[x][y][z]->r->buffer[d].IsEmpty()) ){
-				clean = false;
+// 		if( !t[x][y][z]->pe->flit_queue.empty() ){
+// 			cout<<"t["<<x<<"]["<<y<<"]["<<z<<"] pe flit_queue is not empty "<<t[x][y][z]->pe->flit_queue.front()<<endl;
+// 		}
+// 		if( !t[x][y][z]->pe->packet_queue.empty() ){
+// 			cout<<"t["<<x<<"]["<<y<<"]["<<z<<"] pe packet_queue is not empty "<<t[x][y][z]->pe->packet_queue.front().dst_id<<endl;
+// 		}
+// 		for(int d = 0; d < DIRECTIONS+1; d++){
+// 			if ( !(t[x][y][z]->r->buffer[d].IsEmpty()) ){
+// 				clean = false;
 				
-				if( ((int)(t[x][y][z]->r->buffer[d].Front().timestamp) % (int) (TEMP_REPORT_PERIOD) ) >  NoximGlobalParams::clean_stage_time){
-					int output_channel = t[x][y][z]->r->getFlitRoute(d);
-					cout<<"In node t["<<x<<"]["<<y<<"]["<<z<<"] direction "<<d<<" waiting time "<<getCurrentCycleNum() - t[x][y][z]->r->buffer[d].Front().waiting_cnt<<" ";
-					cout<<t[x][y][z]->r->buffer[d].Front()<<" ";
-					cout<<"This flit is route to "<<output_channel<<" ack("<<t[x][y][z]->r->ack_tx[output_channel]<<") avalible("<<t[x][y][z]->r->getDirAvailable(output_channel)<<")"<<endl;
-				}
-			}
-		}
-	}
-	return clean;
-}
+// 				if( ((int)(t[x][y][z]->r->buffer[d].Front().timestamp) % (int) (TEMP_REPORT_PERIOD) ) >  NoximGlobalParams::clean_stage_time){
+// 					int output_channel = t[x][y][z]->r->getFlitRoute(d);
+// 					cout<<"In node t["<<x<<"]["<<y<<"]["<<z<<"] direction "<<d<<" waiting time "<<getCurrentCycleNum() - t[x][y][z]->r->buffer[d].Front().waiting_cnt<<" ";
+// 					cout<<t[x][y][z]->r->buffer[d].Front()<<" ";
+// 					cout<<"This flit is route to "<<output_channel<<" ack("<<t[x][y][z]->r->ack_tx[output_channel]<<") avalible("<<t[x][y][z]->r->getDirAvailable(output_channel)<<")"<<endl;
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return clean;
+// }
 
 void NoximNoC::TransientLog(){
 	//calculate the period throughtput
@@ -1369,34 +1385,36 @@ void NoximNoC::TransientLog(){
 	int max_delay_id_d             =0;
 	
 		
-		for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++)
-		for(int y=0; y < NoximGlobalParams::mesh_dim_y; y++)
-		for(int x=0; x < NoximGlobalParams::mesh_dim_x; x++){
-			if( !t[x][y][z]->pe->flit_queue.empty() ){
-				cout<<"t["<<x<<"]["<<y<<"]["<<z<<"] pe flit_queue is not empty "<<t[x][y][z]->pe->flit_queue.front()<<", flit_queue size "<<t[x][y][z]->pe->flit_queue.size()<<endl;
-			}
-			if( !t[x][y][z]->pe->packet_queue.empty() ){
-				cout<<"t["<<x<<"]["<<y<<"]["<<z<<"] pe packet_queue is not empty "<<t[x][y][z]->pe->packet_queue.front().dst_id<<", packet_queue size"<<t[x][y][z]->pe->packet_queue.size()<<endl;
-			}
+	for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++)
+	for(int y=0; y < NoximGlobalParams::mesh_dim_y; y++)
+	for(int x=0; x < NoximGlobalParams::mesh_dim_x; x++){
+		if( !t[x][y][z]->pe->flit_queue.empty() ){
+			cout<<"t["<<x<<"]["<<y<<"]["<<z<<"] pe flit_queue is not empty "<<t[x][y][z]->pe->flit_queue.front()<<", flit_queue size "<<t[x][y][z]->pe->flit_queue.size()<<endl;
+		}
+		
+		if( !t[x][y][z]->pe->packet_queue.empty() ){
+			cout<<"t["<<x<<"]["<<y<<"]["<<z<<"] pe packet_queue is not empty "<<t[x][y][z]->pe->packet_queue.front().dst_id<<", packet_queue size"<<t[x][y][z]->pe->packet_queue.size()<<endl;
+		}
+		
 		for(int d = 0; d < DIRECTIONS+1; d++){
 			if ( !(t[x][y][z]->r->buffer[d].IsEmpty()) ){
 				packet_in_buffer++;
 				int output_channel = t[x][y][z]->r->getFlitRoute(d);
 				//if( _emergency ){
-					cout<<"In node t["<<x<<"]["<<y<<"]["<<z<<"] direction "<<d<<" waiting time "<<getCurrentCycleNum() - t[x][y][z]->r->buffer[d].Front().waiting_cnt<<" ";
-					cout<<t[x][y][z]->r->buffer[d].Front()<<" ";
-					cout<<"This flit is route to "<<output_channel<<" ack("<<t[x][y][z]->r->ack_tx[output_channel]<<") avalible("<<t[x][y][z]->r->getDirAvailable(output_channel)<<")"<<endl;
-					cout<<"Reservation table:"<<d<<" route to "<<t[x][y][z]->r->reservation_table.getOutputPort(d)<<" ";
-					cout<<"beltway: "<<t[x][y][z]->r->buffer[d].Front().beltway<<" ";
-					cout<<"hop no.: "<<t[x][y][z]->r->buffer[d].Front().hop_no<<" ";
-					cout<<"arr mid: "<<t[x][y][z]->r->buffer[d].Front().arr_mid<<" ";
-					cout<<"arr mid: "<<t[x][y][z]->r->buffer[d].Front().arr_mid<<" ";
-					cout<<"DW_layer: "<<t[x][y][z]->r->buffer[d].Front().DW_layer<<" ";
-					cout<<endl;
-					if( ((int)(t[x][y][z]->r->buffer[d].Front().timestamp) % (int) (TEMP_REPORT_PERIOD) ) > (int) (TEMP_REPORT_PERIOD) - NoximGlobalParams::clean_stage_time){
-						cout<<"flit timestamp = "<<t[x][y][z]->r->buffer[d].Front().timestamp<<endl;
-						//assert(false);
-					}
+				cout<<"In node t["<<x<<"]["<<y<<"]["<<z<<"] direction "<<d<<" waiting time "<<getCurrentCycleNum() - t[x][y][z]->r->buffer[d].Front().waiting_cnt<<" ";
+				cout<<t[x][y][z]->r->buffer[d].Front()<<" ";
+				cout<<"This flit is route to "<<output_channel<<" ack("<<t[x][y][z]->r->ack_tx[output_channel]<<") avalible("<<t[x][y][z]->r->getDirAvailable(output_channel)<<")"<<endl;
+				cout<<"Reservation table:"<<d<<" route to "<<t[x][y][z]->r->reservation_table.getOutputPort(d)<<" ";
+				cout<<"beltway: "<<t[x][y][z]->r->buffer[d].Front().beltway<<" ";
+				cout<<"hop no.: "<<t[x][y][z]->r->buffer[d].Front().hop_no<<" ";
+				cout<<"arr mid: "<<t[x][y][z]->r->buffer[d].Front().arr_mid<<" ";
+				cout<<"arr mid: "<<t[x][y][z]->r->buffer[d].Front().arr_mid<<" ";
+				cout<<"DW_layer: "<<t[x][y][z]->r->buffer[d].Front().DW_layer<<" ";
+				cout<<endl;
+				if( ((int)(t[x][y][z]->r->buffer[d].Front().timestamp) % (int) (TEMP_REPORT_PERIOD) ) > (int) (TEMP_REPORT_PERIOD) - NoximGlobalParams::clean_stage_time){
+					cout<<"flit timestamp = "<<t[x][y][z]->r->buffer[d].Front().timestamp<<endl;
+					//assert(false);
+				}
 					//assert(false);
 				//}
 			}
@@ -1415,44 +1433,45 @@ void NoximNoC::TransientLog(){
 			}
 		}
 		t[x][y][z]->pe->ResetTransient_Transmit();
-		}
-		total_transmit = total_adaptive_transmit    + 
-						 total_dor_transmit         +       
-						 total_dw_transmit          +       
-						 total_mid_adaptive_transmit+
-						 total_mid_dor_transmit     +
-						 total_mid_dw_transmit      +
-						 total_beltway              ;	
+	}
+	total_transmit = total_adaptive_transmit    + 
+					total_dor_transmit         +       
+					total_dw_transmit          +       
+					total_mid_adaptive_transmit+
+					total_mid_dor_transmit     +
+					total_mid_dw_transmit      +
+					total_beltway              ;	
 		
 	transient_log_throughput<<getCurrentCycleNum()<<"\t"
-	                        <<total_transmit<<"\t"
-							<<total_transmit/TEMP_REPORT_PERIOD<<"\t"
-							<<throttle_num<<"\t"
-							<<max_temp<<"\t"
-							<<total_adaptive_transmit    <<"\t"
-							<<total_dor_transmit         <<"\t"
+	                        <<total_transmit<<"\t\t\t"
+							<<total_transmit/TEMP_REPORT_PERIOD<<"\t\t"
+							<<throttle_num<<"\t\t\t\t"
+							<<max_temp<<"\t\t"
+							<<total_adaptive_transmit    <<"\t\t"
+							<<total_dor_transmit         <<"\t\t"
 							<<total_dw_transmit          <<"\t"
-							<<total_mid_adaptive_transmit<<"\t"
-							<<total_mid_dor_transmit     <<"\t"
-							<<total_mid_dw_transmit      <<"\t"
+							<<total_mid_adaptive_transmit<<"\t\t\t\t"
+							<<total_mid_dor_transmit     <<"\t\t\t"
+							<<total_mid_dw_transmit      <<"\t\t"
 							<<total_beltway              <<"\t"
 							<<endl;
 	transient_topology<<"Throttling Table @"<<getCurrentCycleNum()<<" "<<throttle_num<<" nodes are throttled, "<<packet_in_buffer<<" Non-Empty Buffers, Throughput "
 				    <<total_transmit/TEMP_REPORT_PERIOD<<endl;
-				for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++)
-					transient_topology<<"Layer "<<z<<"\t";
-				transient_topology<<"\n";
-				for(int y=0; y < NoximGlobalParams::mesh_dim_y; y++){
-					for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++){
-						for(int x=0; x < NoximGlobalParams::mesh_dim_x; x++){
-							if(throttling[x][y][z])transient_topology<<"X";
-							else if( beltway[x][y][z] )transient_topology<<"*";
-							else transient_topology<<".";
-						}
-						transient_topology<<"\t";	
-					}
-					transient_topology<<endl;			
-				}
+	for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++)
+		transient_topology<<"Layer "<<z<<"\t";
+	transient_topology<<"\n";
+
+	for(int y=0; y < NoximGlobalParams::mesh_dim_y; y++){
+		for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++){
+			for(int x=0; x < NoximGlobalParams::mesh_dim_x; x++){
+				if(throttling[x][y][z])transient_topology<<"X";
+				else if( beltway[x][y][z] )transient_topology<<"*";
+				else transient_topology<<".";
+			}
+			transient_topology<<"\t";	
+		}
+		transient_topology<<endl;			
+	}
 }
 
 void NoximNoC::_setThrot(int i, int j, int k){

@@ -4,6 +4,7 @@ using namespace std;
 extern ofstream results_log_pwr;
 extern ofstream transient_log_throughput;
 extern ofstream transient_topology;
+extern ofstream traffic_analysis;
 void NoximLog::BufferLog( NoximNoC *n ){
 	ofstream results_buffer;
 	if(!mkdir("results/buffer",0777)) cout<<"Making new directory results/buffer"<<endl;
@@ -261,27 +262,27 @@ void NoximLog::TraceSignal( NoximNoC *n ){
 		tf = sc_create_vcd_trace_file(NoximGlobalParams::trace_filename);
 		sc_trace(tf, n->reset, "reset");
 		sc_trace(tf, n->clock, "clock");
-		int i,j,k;
+		unsigned short i,j,k;
 		for ( i = 0; i < NoximGlobalParams::mesh_dim_x; i++) 
 		for ( j = 0; j < NoximGlobalParams::mesh_dim_y; j++) 
 		for ( k = 0; k < NoximGlobalParams::mesh_dim_z; k++) {
-			char label[30];
-			sprintf(label, "req_to_east(%02d)(%02d)(%02d)", i, j,k);
+			char label[40];
+			sprintf(label, "req_to_east(%02u)(%02u)(%02u)", i, j,k);
 			sc_trace(tf, n->req_to_east[i][j][k], label);
-			sprintf(label, "req_to_west(%02d)(%02d)(%02d)", i, j,k);
+			sprintf(label, "req_to_west(%02u)(%02u)(%02u)", i, j,k);
 			sc_trace(tf, n->req_to_west[i][j][k], label);
-			sprintf(label, "req_to_south(%02d)(%02d)(%02d)", i, j,k);
+			sprintf(label, "req_to_south(%02u)(%02u)(%02u)", i, j,k);
 			sc_trace(tf, n->req_to_south[i][j][k], label);
-			sprintf(label, "req_to_north(%02d)(%02d)(%02d)", i, j,k);
+			sprintf(label, "req_to_north(%02u)(%02u)(%02u)", i, j,k);
 			sc_trace(tf, n->req_to_north[i][j][k], label);
 	    
-			sprintf(label, "ack_to_east(%02d)(%02d)(%02d)", i, j,k);
+			sprintf(label, "ack_to_east(%02u)(%02u)(%02u)", i, j,k);
 			sc_trace(tf, n->ack_to_east[i][j][k], label);
-			sprintf(label, "ack_to_west(%02d)(%02d)(%02d)", i, j,k);
+			sprintf(label, "ack_to_west(%02u)(%02u)(%02u)", i, j,k);
 			sc_trace(tf, n->ack_to_west[i][j][k], label);
-			sprintf(label, "ack_to_south(%02d)(%02d)(%02d)", i, j,k);
+			sprintf(label, "ack_to_south(%02u)(%02u)(%02u)", i, j,k);
 			sc_trace(tf, n->ack_to_south[i][j][k], label);
-			sprintf(label, "ack_to_north(%02d)(%02d)(%02d)", i, j,k);
+			sprintf(label, "ack_to_north(%02u)(%02u)(%02u)", i, j,k);
 			sc_trace(tf, n->ack_to_north[i][j][k], label);
 		}
     }
@@ -331,4 +332,19 @@ void NoximLog::Throughput   (             ){
 void NoximLog::ThroughputEnd(             ){
 	transient_log_throughput.close();
 	transient_topology.close();
+}
+
+void NoximLog::TrafficLog( ){
+	if(!mkdir("results/Traffic",0777))
+        cout<<"Making new directory results/Traffic"<<endl;
+	string filename;
+	filename = "results/Traffic/Traffic_analysis";
+	filename = MarkFileName( filename );
+	traffic_analysis.open(filename.c_str(),ios::out|ios::app);
+	if(!traffic_analysis.is_open())
+		cout<<"Cannot open "<< filename.c_str() <<endl;
+}
+
+void NoximLog::TrafficLogEnd( ){
+	traffic_analysis.close();
 }

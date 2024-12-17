@@ -137,7 +137,8 @@ void Thermal_IF::fpGenerator()
 void Thermal_IF::hs_init()
 {
 	/* initialize flp, get adjacency matrix */
-	hs_flp = read_flp("mesh3d_0.flp", FALSE); //Redundant file, overwrite by lcf file latter
+	char flp_name[] = "mesh3d_0.flp";
+	hs_flp = read_flp(flp_name, FALSE); //Redundant file, overwrite by lcf file latter
 
 	/* 
 	 * configure thermal model parameters. default_thermal_config 
@@ -198,7 +199,7 @@ void Thermal_IF::hs_steady( NoximTile *t[MAX_STATIC_DIM][MAX_STATIC_DIM][MAX_STA
 	string file_name ("results/STEADY/SteadyTemp");
 	file_name = MarkFileName( file_name );
 	char * cstr;
-	hs_simulation_time = int ( getCurrentCycleNum() / TEMP_REPORT_PERIOD ); //¼ÒÀÀ¦¸¼Æ¡A¤£¬O®É¶¡©Îcylce¼Æ
+	hs_simulation_time = int ( getCurrentCycleNum() / TEMP_REPORT_PERIOD ); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¡Aï¿½ï¿½ï¿½Oï¿½É¶ï¿½ï¿½ï¿½cylceï¿½ï¿½
 	/* find the average power dissipated in the elapsed time */
 	for( i = 0 , base = 0 ; i < hs_model->grid->n_layers               ; i++ ){
 		if(hs_model->grid->layers[i].has_power)
@@ -215,11 +216,13 @@ void Thermal_IF::hs_steady( NoximTile *t[MAX_STATIC_DIM][MAX_STATIC_DIM][MAX_STA
 	steady_state_temp(hs_model, hs_overall_power, hs_steady_temp);
 	//dump_overallpwr();
 	dump_temp(hs_model, hs_steady_temp, cstr);
-	dump_steady_temp_grid(hs_model->grid, "results/STEADY/grid_steady_temp");
+	char steady_temp []= "results/STEADY/grid_steady_temp";
+	dump_steady_temp_grid(hs_model->grid, steady_temp);
 	
 	int o,n,m,r_nm,hs_idx;
-	char router_name[30];
-	results_log_router<<"#Steady State Temp.\n";	int hs_base = 0,hs_lyr;
+	char router_name[40];
+	results_log_router<<"#Steady State Temp.\n";
+	int hs_base = 0,hs_lyr;
 	// for( hs_lyr=0, hs_base=0; hs_lyr < hs_model->grid->n_layers; hs_lyr++) {
 	// results_log_router<<"hs_lyr:"<<hs_lyr<<endl;
 	// if(hs_model->grid->layers[hs_lyr].has_power){
@@ -305,7 +308,7 @@ void Thermal_IF::hs_finish()
 void Thermal_IF::hs_temperature(vector<double>& instPwr)
 {
    //convert powerTrace from Network Model to internal power represent format of HotSpot  
-   char router_name[20], mem_name[20], mac_name[20], nb_name[20]; //tile­Ó¼Æ¤£¯à¶W¹L¤Q¦ì¼Æ  XD
+   char router_name[40], mem_name[40], mac_name[40], nb_name[40]; //tileï¿½Ó¼Æ¤ï¿½ï¿½ï¿½Wï¿½Lï¿½Qï¿½ï¿½ï¿½  XD
    int r_nm, mem_nm, mac_nm, nb_nm;
    int m, n, o, hs_lyr, hs_base;
    int hs_idx;
@@ -315,7 +318,7 @@ void Thermal_IF::hs_temperature(vector<double>& instPwr)
    mac_chk = 0;
    int idx = 0;
    
-   for(hs_lyr=0, hs_base=0; hs_lyr < hs_model->grid->n_layers; hs_lyr++) { //¦³µL·N¸q°j°é®ö¶O¦b³o
+   for(hs_lyr=0, hs_base=0; hs_lyr < hs_model->grid->n_layers; hs_lyr++) { //ï¿½ï¿½ï¿½Lï¿½Nï¿½qï¿½jï¿½ï¿½ï¿½ï¿½Oï¿½bï¿½o
 		if(hs_model->grid->layers[hs_lyr].has_power){
 			for( o = 0 ; o < mesh_dim_z ; o ++ )
 			for( n = 0 ; n < mesh_dim_y ; n ++ )
@@ -356,7 +359,7 @@ void Thermal_IF::hs_temperature(vector<double>& instPwr)
 
 void Thermal_IF::Tmp2TtraceFile(vector<double>& temperature)
 {
-	char router_name[30], mem_name[21], mac_name[21], nb_name[21];
+	char router_name[40], mem_name[41], mac_name[41], nb_name[21];
 	int r_nm, mem_nm, mac_nm, nb_nm;
 	int m, n, o, hs_lyr, hs_base;
 	int hs_idx;

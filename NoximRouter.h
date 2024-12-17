@@ -43,54 +43,55 @@ SC_MODULE(NoximRouter)
 	sc_out <bool>on_off             [DIRECTIONS];				    // Information to neighbor router that if this router be throttled
 	sc_in  <bool>on_off_neighbor    [DIRECTIONS];	                // Information of throttling that if neighbor router be throttled
 	
-	sc_out <float>TB             [DIRECTIONS];				    // Information to neighbor router TB 
-	sc_in  <float>TB_neighbor    [DIRECTIONS];	
+	// sc_out <float>TB             	[DIRECTIONS];				    // Information to neighbor router TB 
+	// sc_in  <float>TB_neighbor    	[DIRECTIONS];	
 
-	sc_out <float>PDT             [DIRECTIONS];                                  // Information to neighbor router PDT
-        sc_in  <float>PDT_neighbor    [DIRECTIONS];
+	// sc_out <float>PDT             	[DIRECTIONS];                                  // Information to neighbor router PDT
+    // sc_in  <float>PDT_neighbor    	[DIRECTIONS];
 
-	sc_out <float>buf[DIRECTIONS+2]             [DIRECTIONS];                                  // Information to neighbor router buf0 
-        sc_in  <float>buf_neighbor[DIRECTIONS+2]    [DIRECTIONS];	
+	// sc_out <float>buf				[DIRECTIONS+2] 	[DIRECTIONS];                                  // Information to neighbor router buf0 
+    // sc_in  <float>buf_neighbor		[DIRECTIONS+2] 	[DIRECTIONS];	
 /*
 	sc_out <float>buf[1]             [DIRECTIONS];                                  // Information to neighbor router buf1
-        sc_in  <float>buf_neighbor[1]    [DIRECTIONS];
+	sc_in  <float>buf_neighbor[1]    [DIRECTIONS];
 
 	sc_out <float>buf[2]             [DIRECTIONS];                                  // Information to neighbor router buf2 
-        sc_in  <float>buf_neighbor[2]    [DIRECTIONS];
+	sc_in  <float>buf_neighbor[2]    [DIRECTIONS];
 
 	sc_out <float>buf[3]             [DIRECTIONS];                                  // Information to neighbor router buf3
-        sc_in  <float>buf_neighbor[3]    [DIRECTIONS];
+	sc_in  <float>buf_neighbor[3]    [DIRECTIONS];
 
 	sc_out <float>buf[4]             [DIRECTIONS];                                  // Information to neighbor router buf4 
-        sc_in  <float>buf_neighbor[4]    [DIRECTIONS];
+	sc_in  <float>buf_neighbor[4]    [DIRECTIONS];
 
 	sc_out <float>buf[5]             [DIRECTIONS];                                  // Information to neighbor router buf5 
-        sc_in  <float>buf_neighbor[5]    [DIRECTIONS];
+	sc_in  <float>buf_neighbor[5]    [DIRECTIONS];
 
 	sc_out <float>buf[6]             [DIRECTIONS];                                  // Information to neighbor router buf6 
-        sc_in  <float>buf_neighbor[6]    [DIRECTIONS];
+	sc_in  <float>buf_neighbor[6]    [DIRECTIONS];
 
 	sc_out <float>buf[7]             [DIRECTIONS];                                  // Information to neighbor router buf7 
-        sc_in  <float>buf_neighbor[7]    [DIRECTIONS];
+	sc_in  <float>buf_neighbor[7]    [DIRECTIONS];
 */	
 	/*******RCA******/
 	// Derek------------------------
-	sc_out<int>       RCA_data_out[8];
-	sc_in<int>        RCA_data_in[8];	
+	// sc_out<int>       	RCA_data_out[8];
+	// sc_in<int>        	RCA_data_in[8];	
 	//OBL for beltway
-	sc_out<int> free_slots_PE[4];
-	sc_out<int> RCA_PE[8];
-	sc_out<NoximNoP_data> NoP_PE[4];
+	//sc_out<int> 		  free_slots_PE[4];
+	// sc_out<int> 		  RCA_PE[8];
+	// sc_out<NoximNoP_data> NoP_PE[4];
 	
-	sc_out<double>	 monitor_out[DIRECTIONS];
-	sc_in<double>	 monitor_in [DIRECTIONS];
+	// sc_out<double>	 monitor_out[DIRECTIONS];
+	// sc_in<double>	 monitor_in [DIRECTIONS];
 	
 	// Neighbor-on-Path related I/O
-    sc_out < NoximNoP_data > NoP_data_out[DIRECTIONS];
-    sc_in  < NoximNoP_data > NoP_data_in [DIRECTIONS];
+    // sc_out < NoximNoP_data > NoP_data_out[DIRECTIONS];
+    // sc_in  < NoximNoP_data > NoP_data_in [DIRECTIONS];
 	//
-	sc_out < NoximNoP_data > vertical_free_slot_out;
-    sc_in  < NoximNoP_data > vertical_free_slot_in[4];
+	// sc_out < NoximNoP_data > vertical_free_slot_out;
+    // sc_in  < NoximNoP_data > vertical_free_slot_in[4];
+
     // Registers
     int                    local_id                ;     // Unique ID
     int                    routing_type            ;     // Type of routing algorithm
@@ -127,7 +128,7 @@ SC_MODULE(NoximRouter)
 	void configure(const int _id, const double _warm_up_time,
 		   const unsigned int _max_buffer_size,
 		   NoximGlobalRoutingTable & grt);
-	void TBDB(float consumption_rate);
+	// void TBDB(float consumption_rate);
 
 
 
@@ -148,9 +149,9 @@ SC_MODULE(NoximRouter)
 	sensitive << reset;
 	sensitive << clock.pos();
 
-	SC_METHOD(RCA_Aggregation);
-	sensitive << reset;
-	sensitive << clock.pos();
+	// SC_METHOD(RCA_Aggregation);
+	// sensitive << reset;
+	// sensitive << clock.pos();
 
     SC_METHOD(TraffThrottlingProcess);
     sensitive << reset;
@@ -166,7 +167,7 @@ SC_MODULE(NoximRouter)
 	
     // performs actual routing + selection
     int route(const NoximRouteData & route_data);
-    int Detour(const NoximRouteData & route_data, int input, int waiting);	
+    //int Detour(const NoximRouteData & route_data, int input, int waiting);	
     // wrappers
     int           selectionFunction  (const vector <int> &directions, const NoximRouteData & route_data);
     vector < int >routingFunction    (const NoximRouteData & route_data);
@@ -175,10 +176,10 @@ SC_MODULE(NoximRouter)
     // selection strategies
     int selectionRandom     (const vector <int> & directions                                   );
     int selectionBufferLevel(const vector <int> & directions                                   );
-    int selectionNoP        (const vector <int> & directions, const NoximRouteData & route_data);
-	int selectionProposed   (const vector <int> & directions, const NoximRouteData & route_data);
-    int selectionRCA2D      (const vector <int> & directions, const NoximRouteData & route_data);
-    int selectionThermal    (const vector <int> & directions, const NoximRouteData & route_data);	
+    // int selectionNoP        (const vector <int> & directions, const NoximRouteData & route_data);
+	// int selectionProposed   (const vector <int> & directions, const NoximRouteData & route_data);
+    // int selectionRCA2D      (const vector <int> & directions, const NoximRouteData & route_data);
+    // int selectionThermal    (const vector <int> & directions, const NoximRouteData & route_data);	
 	// routing functions
 	vector < int >routingXYZ             (const NoximCoord & current                          ,const NoximCoord & destination);
 	vector < int >routingZXY             (const NoximCoord & current                          ,const NoximCoord & destination);
@@ -200,9 +201,9 @@ SC_MODULE(NoximRouter)
 	vector < int >routingDLAR            (const NoximCoord & current,const NoximCoord & source,const NoximCoord & destination,const int select_routing, int dw_layer);  
 	vector < int >routingDLDR            (const NoximCoord & current,const NoximCoord & source,const NoximCoord & destination,const int select_routing, int dw_layer);  
 	vector < int >routingTLAR_DW         (const NoximCoord & current,const NoximCoord & source,const NoximCoord & destination); 
-	vector < int >routingTLAR_DW_VBDR    (const NoximCoord & current,const NoximCoord & source,const NoximCoord & destination); 
+	//vector < int >routingTLAR_DW_VBDR    (const NoximCoord & current,const NoximCoord & source,const NoximCoord & destination); 
 	vector < int >routingTLAR_DW_IPD     (const NoximCoord & current,const NoximCoord & source,const NoximCoord & destination); 
-	vector < int >routingTLAR_DW_ADWL    (const NoximCoord & current,const NoximCoord & source,const NoximCoord & destination); 
+	//vector < int >routingTLAR_DW_ADWL    (const NoximCoord & current,const NoximCoord & source,const NoximCoord & destination); 
 	vector < int >routingTLAR_DW_ODWL    (const NoximCoord & current,const NoximCoord & source,const NoximCoord & destination, int dw_layer); 
 	vector < int >routingTLAR_DW_ODWL_IPD(const NoximCoord & current,const NoximCoord & source,const NoximCoord & destination, int dw_layer); 
 	
@@ -214,15 +215,15 @@ SC_MODULE(NoximRouter)
 	
 	
 	
-    void          RCA_Aggregation                    ()      ;
+    // void          RCA_Aggregation                    ()      ;
 	bool          inCongestion                       ()      ;
-	NoximNoP_data getCurrentNoPData                  () const;
-    void          NoP_report                         () const;
-    int           reflexDirection       (int direction) const;
+	// NoximNoP_data getCurrentNoPData                  () const;
+    // void          NoP_report                         () const;
+    // int           reflexDirection       (int direction) const;
     int           getNeighborId(int _id, int direction) const;
 	bool          Adaptive_ok(NoximCoord &sour,NoximCoord &dest);
-	void          DBA(int outgoing,NoximFlit* head);
-    int           NoPScore(const NoximNoP_data & nop_data, const vector <int> & nop_channels) const;
+	// void          DBA(int outgoing,NoximFlit* head);
+    // int           NoPScore(const NoximNoP_data & nop_data, const vector <int> & nop_channels) const;
 	//Run-time Thermal Management
 	bool 	               _emergency               ;     // emergency mode
 	int 	               _emergency_level         ;	 // emergency level

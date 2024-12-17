@@ -75,7 +75,7 @@ thermal_config_t default_thermal_config(void)
 	/* steady state temperatures to file	*/
 	strcpy(config.steady_file, NULLFILE);
 
-	/*Foster:㎝Noxim把计参*/
+	/*Foster:锟組Noxim锟窖计参*/
 	config.sampling_intvl = TEMP_REPORT_PERIOD*CYCLE_PERIOD*1e-9;
 	config.base_proc_freq = 1/(CYCLE_PERIOD*1e-9);		/* base processor frequency in Hz	*/
 
@@ -388,7 +388,7 @@ int thermal_config_to_strs(thermal_config_t *config, str_pair *table, int max_en
 	sprintf(table[26].value, "%lg", config->t_sub);
 	sprintf(table[27].value, "%lg", config->s_solder);
 	sprintf(table[28].value, "%lg", config->t_solder);
-	sprintf(table[29].value, "%s", config->s_pcb);
+	sprintf(table[29].value, "%f", config->s_pcb);
 	sprintf(table[30].value, "%lg", config->t_pcb);
 	sprintf(table[31].value, "%lg", config->ambient);
 	sprintf(table[32].value, "%s", config->init_file);

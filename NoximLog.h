@@ -18,6 +18,8 @@ class NoximLog{
 	void PowerLogEnd  (             );
 	void Throughput   (             );
 	void ThroughputEnd(             );
+	void TrafficLog   (             );
+	void TrafficLogEnd(             );
 	private:
 	sc_trace_file *tf;
 };

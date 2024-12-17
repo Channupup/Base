@@ -467,7 +467,7 @@ void parse_layer_file(grid_model_t *model, FILE *fp)
  */
 void populate_layers_grid(grid_model_t *model, flp_t *flp_default)
 {
-	char str[STR_SIZE];
+	char str[STR_SIZE+40];
 	FILE *fp = NULL;
 
 	/* lcf file specified	*/

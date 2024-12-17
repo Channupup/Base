@@ -11,10 +11,10 @@
 #include "NoximProcessingElement.h"
 
 extern bool throttling[20][20][4];
-extern float temp_budget[20][20][4]; //Derek 2012.12.21
-extern int num_pkt;
-extern float MTTT[20][20][4];
-extern int gradient[20][20][4];
+// extern float temp_budget[20][20][4]; //Derek 2012.12.21
+// extern int num_pkt;
+// extern float MTTT[20][20][4];
+// extern int gradient[20][20][4];
  
 int NoximProcessingElement::randInt(int min, int max)
 {
@@ -86,9 +86,10 @@ void NoximProcessingElement::txProcess()
 		transmittedAtPreviousCycle = false;
 		_clean_all = false;
 		packet_queue_length = 0;
-                num_pkt = 716800;/*
+        //num_pkt = 716800;
+		/*
 		DFS = 4;
-                RST = 0;*/
+        RST = 0;*/
     } 
 	else{
 		NoximPacket  packet;
@@ -120,10 +121,11 @@ void NoximProcessingElement::txProcess()
 			 packet = message_queue.front();
 			 //num_pkt--;
 			 if ( TLA(packet) ){//The routing > 10 all have downward routing
-				 if( NoximGlobalParams::routing_algorithm > 10 || packet.routing != ROUTING_DOWNWARD_CROSS_LAYER){
-					NoximCoord packet_dst = id2Coord(packet.dst_id);
-	                                NoximCoord packet_src = id2Coord(packet.src_id);
-					if(throttling[packet_dst.x][packet_dst.y][packet_dst.z] == 0 && throttling[packet_src.x][packet_src.y][packet_src.z] == 0){
+				 //if( NoximGlobalParams::routing_algorithm > 10 || packet.routing != ROUTING_DOWNWARD_CROSS_LAYER){
+					 NoximCoord packet_dst = id2Coord(packet.dst_id);
+	                 NoximCoord packet_src = id2Coord(packet.src_id);
+					if(throttling[packet_dst.x][packet_dst.y][packet_dst.z] == 0 
+						&& throttling[packet_src.x][packet_src.y][packet_src.z] == 0){
 						 TAAR(packet);
 						 packet.timestamp_ni = getCurrentCycleNum();
 						// cout<<"packet.timestamp_ni ="<<packet.timestamp_ni<<endl;
@@ -131,7 +133,7 @@ void NoximProcessingElement::txProcess()
 						 message_queue.pop();
 						 packet_queue_length++;
 					}
-				 }
+				 //}
 			 }
 		 
 		 }
@@ -144,7 +146,10 @@ void NoximProcessingElement::txProcess()
 					 //while( refly_pkt > 0 ){
 						 if (flit.flit_type==FLIT_TYPE_TAIL)
 							 refly_pkt--;
-						 flit_queue.pop();//¸U¤@±NHEAD POP±¼´N·|¥dbuffer
+						//@ct debug
+						cout << sc_simulation_time() << ": ProcessingElement[" <<
+							local_id << "] flit_queue pop flit " << flit <<", refly_pkt is "<<refly_pkt <<endl;
+						 flit_queue.pop();//ï¿½Uï¿½@ï¿½NHEAD POPï¿½ï¿½ï¿½Nï¿½|ï¿½dbuffer
 						 if( flit_queue.empty() )
 							 break;
 						 else
@@ -372,15 +377,16 @@ NoximPacket NoximProcessingElement::trafficRandom(){
 		else
 			range_start += NoximGlobalParams::hotspots[i].second;	// try next
 		}
-	if (p.dst_id == p.src_id)
-		re_transmit = 1;
-	else{
-		re_transmit = !TLA(p);
-		TAAR(p);
-	}
-	
-	if(re_transmit)
-		transmit--;
+
+		if (p.dst_id == p.src_id)
+			re_transmit = 1;
+		else{
+			re_transmit = !TLA(p);
+			TAAR(p);
+		}
+
+		if(re_transmit)
+			transmit--;
 
     } while ((p.dst_id == p.src_id) || re_transmit);
 	
@@ -603,15 +609,15 @@ void NoximProcessingElement::RTM_set_var(int non_throt_layer, int non_beltway_la
 
 bool NoximProcessingElement::TLA( NoximPacket & packet )
 {
- NoximCoord curr = id2Coord( packet.src_id );
- NoximCoord dest = id2Coord( packet.dst_id );
+ 	NoximCoord curr = id2Coord( packet.src_id );
+ 	NoximCoord dest = id2Coord( packet.dst_id );
 
- int x_diff = dest.x - curr.x;
- int y_diff = dest.y - curr.y;
- int z_diff = dest.z - curr.z;
+ 	int x_diff = dest.x - curr.x;
+ 	int y_diff = dest.y - curr.y;
+ 	int z_diff = dest.z - curr.z;
 
- int n_x, n_y, n_z,y_a,x_a,z_a;
- int a_x_search, a_y_search, a_z_search;
+ 	int n_x, n_y, n_z,y_a,x_a,z_a;
+ 	int a_x_search, a_y_search, a_z_search;
                     
 	bool adaptive_fail         = false;
 	bool xy_fail               = false;
@@ -627,7 +633,7 @@ bool NoximProcessingElement::TLA( NoximPacket & packet )
 	// cout<<"TLA start-A"<<endl;
     if(throttling[dest.x][dest.y][dest.z] == 0){//destination not throttle
 	    //XY-Plane
-	for( z_a = 0 ; z_a < abs(z_diff) + 1 ; z_a++ ){
+		for( z_a = 0 ; z_a < abs(z_diff) + 1 ; z_a++ ){
 		for( y_a = 0 ; y_a < abs(y_diff) + 1 ; y_a ++ )
 		for( x_a = 0 ; x_a < abs(x_diff) + 1 ; x_a ++ ){
 		    a_x_search = (x_diff > 0)?(curr.x + x_a):(curr.x - x_a);
@@ -642,740 +648,742 @@ bool NoximProcessingElement::TLA( NoximPacket & packet )
 		}
 // cout<<"TLA start-XY"<<endl;
 	 /***Into XY Routing***/
-	if( adaptive_fail == true ){
-        //X-direction
-		for( x_a = 1 ; x_a < abs(x_diff) + 1 ; x_a++ ){
-			a_x_search = (x_diff>0)?(curr.x + x_a):(curr.x - x_a);
-			xy_fail |= throttling[a_x_search][curr.y][curr.z];
+		if( adaptive_fail == true ){
+        	//X-direction
+			for( x_a = 1 ; x_a < abs(x_diff) + 1 ; x_a++ ){
+				a_x_search = (x_diff>0)?(curr.x + x_a):(curr.x - x_a);
+				xy_fail |= throttling[a_x_search][curr.y][curr.z];
+			}
+			//Y-direction
+        	for( y_a = 1 ; y_a < abs(y_diff) + 1 ; y_a++ ){
+				a_y_search = (y_diff > 0)?(curr.y + y_a):(curr.y - y_a);
+				xy_fail |= throttling[dest.x][a_y_search][curr.z];
+			}
+			//Z-direction
+        	for( z_a=1;z_a<abs(z_diff)+1;z_a++){
+				a_z_search = (z_diff>0)?(curr.z + z_a):(curr.z - z_a);
+				xy_fail |= throttling[dest.x][dest.y][a_z_search]; 
+			}
 		}
-		//Y-direction
-        for( y_a = 1 ; y_a < abs(y_diff) + 1 ; y_a++ ){
-			a_y_search = (y_diff > 0)?(curr.y + y_a):(curr.y - y_a);
-			xy_fail |= throttling[dest.x][a_y_search][curr.z];
+		// cout<<"TLA start-DW"<<endl;
+    	/***Into Downward Routing***/
+		if(xy_fail == true){
+			dw_fail_src = false;
+		    int z_diff_dw_s = (NoximGlobalParams::mesh_dim_z-1) - curr.z;
+		    for( int zzt = 1 ; zzt < z_diff_dw_s + 1 ; zzt++ ){
+				dw_fail_src |= throttling[curr.x][curr.y][curr.z + zzt];
+			}
+			dw_fail_dest = false;
+			int z_diff_dw_d = (NoximGlobalParams::mesh_dim_z-1) - dest.z;
+		    for( int zzt = 1 ; zzt < z_diff_dw_d + 1 ; zzt++ ){
+				dw_fail_dest |= throttling[dest.x][dest.y][dest.z + zzt];
+			}
 		}
-		//Z-direction
-        for( z_a=1;z_a<abs(z_diff)+1;z_a++){
-			a_z_search = (z_diff>0)?(curr.z + z_a):(curr.z - z_a);
-			xy_fail |= throttling[dest.x][dest.y][a_z_search]; 
+		// cout<<"TLA start-ASSIGN"<<endl;
+		//adaptive_fail = false;
+		if     ( adaptive_fail                 == false )routing = ROUTING_WEST_FIRST;
+		else if(      xy_fail                  == false )routing = ROUTING_XYZ;
+		else if( (dw_fail_dest || dw_fail_src) == false )routing = ROUTING_DOWNWARD_CROSS_LAYER;
+		else {  routing = ROUTING_XYZ ;//INVALID_ROUTING;
+				//cout<<"fuck routing function all fail"<<endl;
+				return true;
 		}
-	}
-	// cout<<"TLA start-DW"<<endl;
-    /***Into Downward Routing***/
-	if(xy_fail == true){
-		dw_fail_src = false;
-	    int z_diff_dw_s = (NoximGlobalParams::mesh_dim_z-1) - curr.z;
-	    for( int zzt = 1 ; zzt < z_diff_dw_s + 1 ; zzt++ ){
-			dw_fail_src |= throttling[curr.x][curr.y][curr.z + zzt];
-		}
-		dw_fail_dest = false;
-		int z_diff_dw_d = (NoximGlobalParams::mesh_dim_z-1) - dest.z;
-	    for( int zzt = 1 ; zzt < z_diff_dw_d + 1 ; zzt++ ){
-			dw_fail_dest |= throttling[dest.x][dest.y][dest.z + zzt];
-		}
-	}
-	// cout<<"TLA start-ASSIGN"<<endl;
-	//adaptive_fail = false;
-	if     ( adaptive_fail                 == false )routing = ROUTING_WEST_FIRST;
-	else if(      xy_fail                  == false )routing = ROUTING_XYZ;
-	else if( (dw_fail_dest || dw_fail_src) == false )routing = ROUTING_DOWNWARD_CROSS_LAYER;
-	else {  routing = INVALID_ROUTING;
-			//cout<<"fuck routing function all fail"<<endl;
-			return false;
-	}
 	
-	packet.routing   = routing;
-	//packet.timestamp = getCurrentCycleNum() ;
-    //packet.size      = packet.flit_left = getRandomSize();
-	if ( NoximGlobalParams::mesh_dim_z - _non_throt_layer != 0)
-		packet.DW_layer  = _non_throt_layer + rand() % ( NoximGlobalParams::mesh_dim_z - _non_throt_layer);
-	else
-		packet.DW_layer  = -1;
-    // return TAAR(packet);
-	return true;
+		packet.routing   = routing;
+		//packet.timestamp = getCurrentCycleNum() ;
+    	//packet.size      = packet.flit_left = getRandomSize();
+		if ( NoximGlobalParams::mesh_dim_z - _non_throt_layer != 0)
+			packet.DW_layer  = _non_throt_layer + rand() % ( NoximGlobalParams::mesh_dim_z - _non_throt_layer);
+		else
+			packet.DW_layer  = -1;
+    	// return TAAR(packet);
+		return true;
 	}
 	else{//destination throttled
 		not_transmit++;
 		packet.routing = INVALID_ROUTING;
 		//cout<<"fuck! dst throttle"<<endl;
-		return false;
+		return true;
 	}	
 }
 
 bool NoximProcessingElement::TAAR( NoximPacket & p ){
 	//Routing mode and cascaded node decision
-	if ( NoximGlobalParams::beltway )//&& ( _non_beltway_layer > id2Coord(local_id).z) )
-		Beltway(p);
-	else if ( p.routing == ROUTING_DOWNWARD_CROSS_LAYER && NoximGlobalParams::cascade_node ){
-		assert( p.src_id < MAX_ID + 1);
-		assert( p.dst_id < MAX_ID + 1);
-		if( NoximGlobalParams::Mcascade )
-			p.mid_id    = sel_int_node_Mcascade(p.src_id,p.dst_id);
-		else
-			p.mid_id    = sel_int_node(p.src_id,p.dst_id);
+	// if ( NoximGlobalParams::beltway )//&& ( _non_beltway_layer > id2Coord(local_id).z) )
+	// 	Beltway(p);
+	// else if ( p.routing == ROUTING_DOWNWARD_CROSS_LAYER && NoximGlobalParams::cascade_node ){
+	// 	assert( p.src_id < MAX_ID + 1);
+	// 	assert( p.dst_id < MAX_ID + 1);
+	// 	if( NoximGlobalParams::Mcascade )
+	// 		p.mid_id    = sel_int_node_Mcascade(p.src_id,p.dst_id);
+	// 	else
+	// 		p.mid_id    = sel_int_node(p.src_id,p.dst_id);
 			
-		if(p.mid_id == p.src_id){//if the packet needs to downward directly
-			p.arr_mid = true;
-		}
-		else {
-			p.arr_mid   = false;
-			p.routing   = ROUTING_WEST_FIRST;
-		}
-	}
-	else{
-		p.arr_mid = true;
-		p.mid_id  = p.src_id;
-	}
-	if ( p.routing  > 19 ){
-		cout<<p.routing<<endl;
-		assert(false);
-	}
+	// 	if(p.mid_id == p.src_id){//if the packet needs to downward directly
+	// 		p.arr_mid = true;
+	// 	}
+	// 	else {
+	// 		p.arr_mid   = false;
+	// 		p.routing   = ROUTING_WEST_FIRST;
+	// 	}
+	// }
+	// else{
+	// 	p.arr_mid = true;
+	// 	p.mid_id  = p.src_id;
+	// }
+	// if ( p.routing  > 19 ){
+	// 	cout<<p.routing<<endl;
+	// 	assert(false);
+	// }
+	p.arr_mid = true;
+	p.mid_id  = p.src_id;
 	return true;
 }
 
-bool NoximProcessingElement::Beltway( NoximPacket & p ){
+// bool NoximProcessingElement::Beltway( NoximPacket & p ){
 	
-	int routing;
+// 	int routing;
 
-	p.mid_id = sel_int_node_belt(p.src_id,p.dst_id,p.beltway,routing);
+// 	p.mid_id = sel_int_node_belt(p.src_id,p.dst_id,p.beltway,routing);
 	
-	if( (id2Coord(p.mid_id).x == id2Coord(p.dst_id).x) && (id2Coord(p.mid_id).y == id2Coord(p.dst_id).y) ){//mid = dst, packet send directly
-		p.arr_mid = true;
-		p.mid_id  = p.src_id;
-		p.routing = ROUTING_WEST_FIRST;//ROUTING_ODD_EVEN_3D;
-		//cout<<"fuck~ mid node errer1"<<endl;
-	}
-	else if ( (id2Coord(p.mid_id).x == id2Coord(p.src_id).x) && (id2Coord(p.mid_id).y == id2Coord(p.src_id).y) ){//mid = src, Needs downward
-		p.arr_mid = true;
-		if(p.beltway)
-			p.routing = ROUTING_WEST_FIRST;
-		else
-			p.routing = ROUTING_DOWNWARD_CROSS_LAYER;
-		//cout<<"fuck~ mid node errer2"<<endl;
-	}
-	else{
-		p.arr_mid = false;
-		if( p.beltway ){
-			p.routing = ROUTING_WEST_FIRST;//ROUTING_ODD_EVEN_3D;
-		}
-		else{
-			p.routing = ROUTING_WEST_FIRST;//ROUTING_ODD_EVEN_3D;
-		}
-		//cout<<"fuck~ mid node errer3"<<endl;
-	}
-	return true;
-}
+// 	if( (id2Coord(p.mid_id).x == id2Coord(p.dst_id).x) && (id2Coord(p.mid_id).y == id2Coord(p.dst_id).y) ){//mid = dst, packet send directly
+// 		p.arr_mid = true;
+// 		p.mid_id  = p.src_id;
+// 		p.routing = ROUTING_WEST_FIRST;//ROUTING_ODD_EVEN_3D;
+// 		//cout<<"fuck~ mid node errer1"<<endl;
+// 	}
+// 	else if ( (id2Coord(p.mid_id).x == id2Coord(p.src_id).x) && (id2Coord(p.mid_id).y == id2Coord(p.src_id).y) ){//mid = src, Needs downward
+// 		p.arr_mid = true;
+// 		if(p.beltway)
+// 			p.routing = ROUTING_WEST_FIRST;
+// 		else
+// 			p.routing = ROUTING_DOWNWARD_CROSS_LAYER;
+// 		//cout<<"fuck~ mid node errer2"<<endl;
+// 	}
+// 	else{
+// 		p.arr_mid = false;
+// 		if( p.beltway ){
+// 			p.routing = ROUTING_WEST_FIRST;//ROUTING_ODD_EVEN_3D;
+// 		}
+// 		else{
+// 			p.routing = ROUTING_WEST_FIRST;//ROUTING_ODD_EVEN_3D;
+// 		}
+// 		//cout<<"fuck~ mid node errer3"<<endl;
+// 	}
+// 	return true;
+// }
 
 /*Select the intemedium node (Jimmy modified on 2011.07.01)*/
-int NoximProcessingElement::sel_int_node(int source, int  destination) 
-{
+// int NoximProcessingElement::sel_int_node(int source, int  destination) 
+// {
 	
-	assert(source      < MAX_ID + 1 );
-	assert(destination < MAX_ID + 1 );
-	NoximCoord s = id2Coord(source     ); //transfer source id to coordination
-	NoximCoord d = id2Coord(destination); //transfer destination id to coordination
-	NoximCoord int_node; //intermedium node
-	if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
-		cout<<getCurrentCycleNum()<<":sel_int_node-"<<s<<","<<d<<endl;
-	int lateral_bound; //find the lateral searching bound
-	int vertical_bound; //find the vertical searching bound
-	float sel_candidate; //the area of intermedium node region
-	float candidate_tmp;
+// 	assert(source      < MAX_ID + 1 );
+// 	assert(destination < MAX_ID + 1 );
+// 	NoximCoord s = id2Coord(source     ); //transfer source id to coordination
+// 	NoximCoord d = id2Coord(destination); //transfer destination id to coordination
+// 	NoximCoord int_node; //intermedium node
+// 	if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
+// 		cout<<getCurrentCycleNum()<<":sel_int_node-"<<s<<","<<d<<endl;
+// 	int lateral_bound; //find the lateral searching bound
+// 	int vertical_bound; //find the vertical searching bound
+// 	float sel_candidate; //the area of intermedium node region
+// 	float candidate_tmp;
 	
-	if(d.x > s.x & d.y > s.y)
-	{
-		if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
-		cout<<"In case d.x > s.x & d.y > s.y"<<endl;
-		vertical_bound = d.y;
-		lateral_bound = d.x;
-		sel_candidate = 0;
-		for(int x=s.x; x<=d.x; x++)
-		{
-			if(throttling[x][s.y][s.z]==1)
-			{
-				lateral_bound = x - 1;
-				break;
-			}
-			for(int y=s.y; y<=vertical_bound; y++)
-			{
-				if(throttling[x][y][s.z]==1 || y==vertical_bound)
-				{
-					candidate_tmp = (y==vertical_bound && !throttling[x][y][s.z]) ? (x - s.x +1) * (y - s.y + 1) : (x - s.x +1) * ((y-1) - s.y + 1);
-					if(candidate_tmp >= sel_candidate)
-					{
-						vertical_bound = (y == s.y) ? s.y : (y == vertical_bound && !throttling[x][y][s.z]) ? y : (y-1);
-						lateral_bound = (x == s.x) ? s.x :  x; //always is x-1, because souce node cannot be throttled in this phase
-						sel_candidate = candidate_tmp;
-					}
-					break;
-				}
-			}
-		}//end outer-for
-		int_node.x = lateral_bound;
-		int_node.y = vertical_bound;
-		int_node.z = s.z;
+// 	if(d.x > s.x & d.y > s.y)
+// 	{
+// 		if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
+// 		cout<<"In case d.x > s.x & d.y > s.y"<<endl;
+// 		vertical_bound = d.y;
+// 		lateral_bound = d.x;
+// 		sel_candidate = 0;
+// 		for(int x=s.x; x<=d.x; x++)
+// 		{
+// 			if(throttling[x][s.y][s.z]==1)
+// 			{
+// 				lateral_bound = x - 1;
+// 				break;
+// 			}
+// 			for(int y=s.y; y<=vertical_bound; y++)
+// 			{
+// 				if(throttling[x][y][s.z]==1 || y==vertical_bound)
+// 				{
+// 					candidate_tmp = (y==vertical_bound && !throttling[x][y][s.z]) ? (x - s.x +1) * (y - s.y + 1) : (x - s.x +1) * ((y-1) - s.y + 1);
+// 					if(candidate_tmp >= sel_candidate)
+// 					{
+// 						vertical_bound = (y == s.y) ? s.y : (y == vertical_bound && !throttling[x][y][s.z]) ? y : (y-1);
+// 						lateral_bound = (x == s.x) ? s.x :  x; //always is x-1, because souce node cannot be throttled in this phase
+// 						sel_candidate = candidate_tmp;
+// 					}
+// 					break;
+// 				}
+// 			}
+// 		}//end outer-for
+// 		int_node.x = lateral_bound;
+// 		int_node.y = vertical_bound;
+// 		int_node.z = s.z;
 
-		//if(int_node.x == d.x) int_node.y = d.y; //XY routable
-		return coord2Id(int_node);
-	}
-	else if(d.x > s.x & d.y <= s.y)
-	{
-		if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
-		cout<<"In case d.x > s.x & d.y < s.y"<<endl;
-		vertical_bound = d.y;
-		lateral_bound = d.x;
-		sel_candidate = 0;
-		for(int x=s.x; x<=d.x; x++)
-		{
-			if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
-			cout<<"In for loop of x="<<x<<endl;
-			if(throttling[x][s.y][s.z]==1){
-				lateral_bound = x - 1;
-				break;
-			}
-			for(int y=s.y; y>=vertical_bound; y--)
-			{
-				if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
-				cout<<"In for loop of y="<<y<<endl;
-				if(throttling[x][y][s.z]==1 || y==vertical_bound)
-				{
-					candidate_tmp = (y == vertical_bound && !throttling[x][y][s.z]) ? (x - s.x +1) * (s.y - y + 1) * MTTT[s.x][s.y][s.z] : (x - s.x +1) * (s.y - (y+1) + 1) * MTTT[s.x][s.y][s.z] ;
-					if(candidate_tmp >=sel_candidate)
-					{
-						vertical_bound = (y == s.y) ? s.y : (y == vertical_bound && !throttling[x][y][s.z]) ? y : (y+1);
-						lateral_bound  = (x == s.x) ? s.x :  x; //always is x-1, because souce node cannot be throttled in this phase
-						sel_candidate  = candidate_tmp;
-					}
-					break;
-				}
-			}
-		}//end outer-for
-		int_node.x = lateral_bound;
-		int_node.y = vertical_bound;
-		int_node.z = s.z;
+// 		//if(int_node.x == d.x) int_node.y = d.y; //XY routable
+// 		return coord2Id(int_node);
+// 	}
+// 	else if(d.x > s.x & d.y <= s.y)
+// 	{
+// 		if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
+// 		cout<<"In case d.x > s.x & d.y < s.y"<<endl;
+// 		vertical_bound = d.y;
+// 		lateral_bound = d.x;
+// 		sel_candidate = 0;
+// 		for(int x=s.x; x<=d.x; x++)
+// 		{
+// 			if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
+// 			cout<<"In for loop of x="<<x<<endl;
+// 			if(throttling[x][s.y][s.z]==1){
+// 				lateral_bound = x - 1;
+// 				break;
+// 			}
+// 			for(int y=s.y; y>=vertical_bound; y--)
+// 			{
+// 				if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
+// 				cout<<"In for loop of y="<<y<<endl;
+// 				if(throttling[x][y][s.z]==1 || y==vertical_bound)
+// 				{
+// 					candidate_tmp = (y == vertical_bound && !throttling[x][y][s.z]) ? (x - s.x +1) * (s.y - y + 1) * MTTT[s.x][s.y][s.z] : (x - s.x +1) * (s.y - (y+1) + 1) * MTTT[s.x][s.y][s.z] ;
+// 					if(candidate_tmp >=sel_candidate)
+// 					{
+// 						vertical_bound = (y == s.y) ? s.y : (y == vertical_bound && !throttling[x][y][s.z]) ? y : (y+1);
+// 						lateral_bound  = (x == s.x) ? s.x :  x; //always is x-1, because souce node cannot be throttled in this phase
+// 						sel_candidate  = candidate_tmp;
+// 					}
+// 					break;
+// 				}
+// 			}
+// 		}//end outer-for
+// 		int_node.x = lateral_bound;
+// 		int_node.y = vertical_bound;
+// 		int_node.z = s.z;
 
-		//if(int_node.x == d.x) int_node.y = d.y; //XY routable
-		return coord2Id(int_node);
-	}
-	else if(d.x <= s.x & d.y > s.y)
-	{	if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
-		cout<<"In case d.x < s.x & d.y > s.y"<<endl;
-		vertical_bound = d.y;
-		lateral_bound = d.x;
-		sel_candidate = 0;
-		for(int x=s.x; x>=d.x; x--)
-		{
-			if(throttling[x][s.y][s.z]==1)
-			{
-				lateral_bound = x + 1;
-				break;
-			}
-			for(int y=s.y; y<=vertical_bound; y++)
-			{
-				if(throttling[x][y][s.z]==1 || y==vertical_bound)
-				{
-					candidate_tmp = (y==vertical_bound && !throttling[x][y][s.z]) ? (s.x - x +1) * (y -s.y + 1) * MTTT[s.x][s.y][s.z] : (s.x - x +1) * ((y-1) -s. y + 1) * MTTT[s.x][s.y][s.z] ;
-					if(candidate_tmp >= sel_candidate)
-					{
-						vertical_bound = (y == s.y) ? s.y : (y == vertical_bound && !throttling[x][y][s.z]) ? y : (y-1);
-						lateral_bound = (x == s.x) ? s.x : x; //always is x+1, because souce node cannot be throttled in this phase
-						sel_candidate = candidate_tmp;
-					}
-					break;
-				}
-			}
-		}//end outer-for
-		int_node.x = lateral_bound;
-		int_node.y = vertical_bound;
-		int_node.z = s.z;
+// 		//if(int_node.x == d.x) int_node.y = d.y; //XY routable
+// 		return coord2Id(int_node);
+// 	}
+// 	else if(d.x <= s.x & d.y > s.y)
+// 	{	if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
+// 		cout<<"In case d.x < s.x & d.y > s.y"<<endl;
+// 		vertical_bound = d.y;
+// 		lateral_bound = d.x;
+// 		sel_candidate = 0;
+// 		for(int x=s.x; x>=d.x; x--)
+// 		{
+// 			if(throttling[x][s.y][s.z]==1)
+// 			{
+// 				lateral_bound = x + 1;
+// 				break;
+// 			}
+// 			for(int y=s.y; y<=vertical_bound; y++)
+// 			{
+// 				if(throttling[x][y][s.z]==1 || y==vertical_bound)
+// 				{
+// 					candidate_tmp = (y==vertical_bound && !throttling[x][y][s.z]) ? (s.x - x +1) * (y -s.y + 1) * MTTT[s.x][s.y][s.z] : (s.x - x +1) * ((y-1) -s. y + 1) * MTTT[s.x][s.y][s.z] ;
+// 					if(candidate_tmp >= sel_candidate)
+// 					{
+// 						vertical_bound = (y == s.y) ? s.y : (y == vertical_bound && !throttling[x][y][s.z]) ? y : (y-1);
+// 						lateral_bound = (x == s.x) ? s.x : x; //always is x+1, because souce node cannot be throttled in this phase
+// 						sel_candidate = candidate_tmp;
+// 					}
+// 					break;
+// 				}
+// 			}
+// 		}//end outer-for
+// 		int_node.x = lateral_bound;
+// 		int_node.y = vertical_bound;
+// 		int_node.z = s.z;
 
-		//if(int_node.x == d.x) int_node.y = d.y; //XY routable
-		return coord2Id(int_node);
-	}
-	else if(d.x <= s.x & d.y <= s.y)
-	{	if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
-		cout<<"In case d.x < s.x & d.y < s.y"<<endl;
-		vertical_bound = d.y;
-		lateral_bound = d.x;
-		sel_candidate = 0;
-		for(int x=s.x; x>=d.x; x--)
-		{
-			if(throttling[x][s.y][s.z]==1)
-			{
-				lateral_bound = x + 1;
-				break;
-			}
-			for(int y=s.y; y>=vertical_bound; y--)
-			{
-				if(throttling[x][y][s.z]==1 || y==vertical_bound)
-				{
-					candidate_tmp = (y==vertical_bound && !throttling[x][y][s.z]) ? (s.x - x +1) * (s.y - y + 1) * MTTT[s.x][s.y][s.z] : (s.x - x +1) * (s.y - (y+1) + 1) * MTTT[s.x][s.y][s.z] ;
-					if(candidate_tmp >= sel_candidate)
-					{
-						vertical_bound = (y == s.y) ? s.y : (y == vertical_bound && !throttling[x][y][s.z]) ? y : (y+1);
-						lateral_bound = (x == s.x) ? s.x : x; //always is x+1, because souce node cannot be throttled in this phase
-						sel_candidate = candidate_tmp;
-					}
-					break;
-				}
-			}
-		}//end outer-for
-		int_node.x = lateral_bound;
-		int_node.y = vertical_bound;
-		int_node.z = s.z;
+// 		//if(int_node.x == d.x) int_node.y = d.y; //XY routable
+// 		return coord2Id(int_node);
+// 	}
+// 	else if(d.x <= s.x & d.y <= s.y)
+// 	{	if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
+// 		cout<<"In case d.x < s.x & d.y < s.y"<<endl;
+// 		vertical_bound = d.y;
+// 		lateral_bound = d.x;
+// 		sel_candidate = 0;
+// 		for(int x=s.x; x>=d.x; x--)
+// 		{
+// 			if(throttling[x][s.y][s.z]==1)
+// 			{
+// 				lateral_bound = x + 1;
+// 				break;
+// 			}
+// 			for(int y=s.y; y>=vertical_bound; y--)
+// 			{
+// 				if(throttling[x][y][s.z]==1 || y==vertical_bound)
+// 				{
+// 					candidate_tmp = (y==vertical_bound && !throttling[x][y][s.z]) ? (s.x - x +1) * (s.y - y + 1) * MTTT[s.x][s.y][s.z] : (s.x - x +1) * (s.y - (y+1) + 1) * MTTT[s.x][s.y][s.z] ;
+// 					if(candidate_tmp >= sel_candidate)
+// 					{
+// 						vertical_bound = (y == s.y) ? s.y : (y == vertical_bound && !throttling[x][y][s.z]) ? y : (y+1);
+// 						lateral_bound = (x == s.x) ? s.x : x; //always is x+1, because souce node cannot be throttled in this phase
+// 						sel_candidate = candidate_tmp;
+// 					}
+// 					break;
+// 				}
+// 			}
+// 		}//end outer-for
+// 		int_node.x = lateral_bound;
+// 		int_node.y = vertical_bound;
+// 		int_node.z = s.z;
 
-		//if(int_node.x == d.x) int_node.y = d.y; //XY routable
-		return coord2Id(int_node);
-	}
-	else{
-		if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
-		cout<<"Mid node return destination"<<endl;
-		return destination; //if(d.x == s.x & d.y > s.y),  if(d.x == s.x & d.y < s.y),  if(d.x > s.x & d.y == s.y),  if(d.x < s.x & d.y == s.y)
-	}
-}
+// 		//if(int_node.x == d.x) int_node.y = d.y; //XY routable
+// 		return coord2Id(int_node);
+// 	}
+// 	else{
+// 		if (NoximGlobalParams::verbose_mode > VERBOSE_LOW ) 
+// 		cout<<"Mid node return destination"<<endl;
+// 		return destination; //if(d.x == s.x & d.y > s.y),  if(d.x == s.x & d.y < s.y),  if(d.x > s.x & d.y == s.y),  if(d.x < s.x & d.y == s.y)
+// 	}
+// }
 
-int NoximProcessingElement::sel_int_node_belt(int source, int  destination, bool &beltway, int &routing){
-	NoximCoord s = id2Coord(source     ); //transfer source id to coordination
-	NoximCoord d = id2Coord(destination); //transfer destination id to coordination
-	NoximCoord m =(NoximGlobalParams::cascade_node)? id2Coord(sel_int_node(source,destination)):id2Coord(destination); //intermedium node  3DWF
-	int ring_level,mid,i;
-	int min_hop = 2*(abs(s.x - d.x) + abs(s.y - d.y));
-	int beltway_hop;
-	bool beltway_decision;
-	if(NoximGlobalParams::br_sel == SEL_RANDOM)
-		beltway_decision = _beltway_RND(s,d);
-	else if(NoximGlobalParams::br_sel == SEL_BUFFER_LEVEL)
-		beltway_decision = _beltway_OBL(s,d);
-	else if(NoximGlobalParams::br_sel == SEL_NOP)
-		beltway_decision = _beltway_RCA(s,d);
-	else if(NoximGlobalParams::br_sel == SEL_RCA)
-		beltway_decision = _beltway_RCA(s,d);
-	else if(NoximGlobalParams::br_sel == SEL_THERMAL)  // Derek 2012.12.21
-		beltway_decision = _beltway_THERMAL(s,d);			
-	else if(NoximGlobalParams::br_sel == SEL_OBLIVIOUS){
-		float rnd = (float) rand();
-		beltway_decision = inROC(s,d) && (( rnd  / RAND_MAX) < NoximGlobalParams::beltway_ratio );
-		}
-	else
-		assert(false);
+// int NoximProcessingElement::sel_int_node_belt(int source, int  destination, bool &beltway, int &routing){
+// 	NoximCoord s = id2Coord(source     ); //transfer source id to coordination
+// 	NoximCoord d = id2Coord(destination); //transfer destination id to coordination
+// 	NoximCoord m =(NoximGlobalParams::cascade_node)? id2Coord(sel_int_node(source,destination)):id2Coord(destination); //intermedium node  3DWF
+// 	int ring_level,mid,i;
+// 	int min_hop = 2*(abs(s.x - d.x) + abs(s.y - d.y));
+// 	int beltway_hop;
+// 	bool beltway_decision;
+// 	if(NoximGlobalParams::br_sel == SEL_RANDOM)
+// 		beltway_decision = _beltway_RND(s,d);
+// 	else if(NoximGlobalParams::br_sel == SEL_BUFFER_LEVEL)
+// 		beltway_decision = _beltway_OBL(s,d);
+// 	else if(NoximGlobalParams::br_sel == SEL_NOP)
+// 		beltway_decision = _beltway_RCA(s,d);
+// 	else if(NoximGlobalParams::br_sel == SEL_RCA)
+// 		beltway_decision = _beltway_RCA(s,d);
+// 	else if(NoximGlobalParams::br_sel == SEL_THERMAL)  // Derek 2012.12.21
+// 		beltway_decision = _beltway_THERMAL(s,d);			
+// 	else if(NoximGlobalParams::br_sel == SEL_OBLIVIOUS){
+// 		float rnd = (float) rand();
+// 		beltway_decision = inROC(s,d) && (( rnd  / RAND_MAX) < NoximGlobalParams::beltway_ratio );
+// 		}
+// 	else
+// 		assert(false);
 		
-	if( NoximGlobalParams::Mbeltway )
-		ring_level = inRing(d);
-	else
-		ring_level = 0;
+// 	if( NoximGlobalParams::Mbeltway )
+// 		ring_level = inRing(d);
+// 	else
+// 		ring_level = 0;
 		
-	if( s.x > d.x && beltway_decision ){
-		if( d.y >  NoximGlobalParams::mesh_dim_y/2 ){
-			mid = xyz2Id( NoximGlobalParams::mesh_dim_x - 1 - ring_level, NoximGlobalParams::mesh_dim_y - 1 - ring_level, d.z );
-			NoximPacket p( source, mid, 0, 2);
-			beltway_hop = NoximGlobalParams::mesh_dim_x - 1 - s.x + NoximGlobalParams::mesh_dim_y - 1 - s.y + NoximGlobalParams::mesh_dim_x - 1 - d.x + NoximGlobalParams::mesh_dim_y - 1 - d.y;
-			if( TLA(p) && ( p.routing == ROUTING_WEST_FIRST || p.routing == ROUTING_XYZ ) && ( beltway_hop < min_hop )){
-				beltway = true;
-				routing = p.routing;
-				return mid;
-				}
-			//else
-			//	cout<<"fuck 1! sel_int_node_belt"<<endl;
-		}
-		else{
-			mid = xyz2Id( NoximGlobalParams::mesh_dim_x - 1 - ring_level, ring_level, d.z );
-			NoximPacket p( source, mid, 0, 2);
-			beltway_hop = NoximGlobalParams::mesh_dim_x - 1 - s.x + s.y + NoximGlobalParams::mesh_dim_x - 1 - d.x + d.y;
-			if( TLA(p) && ( p.routing ==  ROUTING_WEST_FIRST || p.routing == ROUTING_XYZ ) && ( beltway_hop < min_hop )){
-				beltway = true;
-				routing = p.routing;
-				return mid;
-				}
-			//else
-			//	cout<<"fuck 2! sel_int_node_belt"<<endl;
-		}
-	}
-	 if ( s.x < d.x && beltway_decision ){
-		if( d.y > NoximGlobalParams::mesh_dim_y/2 ){
-			mid = xyz2Id( ring_level, NoximGlobalParams::mesh_dim_y - 1 - ring_level, d.z );
-			NoximPacket p( source, mid, 0, 2);
-			beltway_hop = s.x + NoximGlobalParams::mesh_dim_y - 1 - s.y + d.x + NoximGlobalParams::mesh_dim_y - 1 - d.y;
-			if( TLA(p) && ( p.routing == ROUTING_WEST_FIRST || p.routing == ROUTING_XYZ ) && ( beltway_hop < min_hop )){
-				beltway = true;
-				routing = p.routing;
-				return mid;
-				}
-			//else
-			//	cout<<"fuck 3! sel_int_node_belt"<<endl;
-		}
-		else{
-			mid = xyz2Id( ring_level, ring_level, d.z );
-			NoximPacket p( source, mid, 0, 2);
-			beltway_hop = s.x + s.y + d.x + d.y;
-			if( TLA(p) && ( p.routing == ROUTING_WEST_FIRST || p.routing == ROUTING_XYZ ) && ( beltway_hop < min_hop )){
-				beltway = true;
-				routing = p.routing;
-				return mid;
-				}
-			//else
-			//	cout<<"fuck 4! sel_int_node_belt"<<endl;
-		}
-	}
-	return coord2Id(m);
-}
-int NoximProcessingElement::sel_int_node_Mcascade(int source, int  destination) {
+// 	if( s.x > d.x && beltway_decision ){
+// 		if( d.y >  NoximGlobalParams::mesh_dim_y/2 ){
+// 			mid = xyz2Id( NoximGlobalParams::mesh_dim_x - 1 - ring_level, NoximGlobalParams::mesh_dim_y - 1 - ring_level, d.z );
+// 			NoximPacket p( source, mid, 0, 2);
+// 			beltway_hop = NoximGlobalParams::mesh_dim_x - 1 - s.x + NoximGlobalParams::mesh_dim_y - 1 - s.y + NoximGlobalParams::mesh_dim_x - 1 - d.x + NoximGlobalParams::mesh_dim_y - 1 - d.y;
+// 			if( TLA(p) && ( p.routing == ROUTING_WEST_FIRST || p.routing == ROUTING_XYZ ) && ( beltway_hop < min_hop )){
+// 				beltway = true;
+// 				routing = p.routing;
+// 				return mid;
+// 				}
+// 			//else
+// 			//	cout<<"fuck 1! sel_int_node_belt"<<endl;
+// 		}
+// 		else{
+// 			mid = xyz2Id( NoximGlobalParams::mesh_dim_x - 1 - ring_level, ring_level, d.z );
+// 			NoximPacket p( source, mid, 0, 2);
+// 			beltway_hop = NoximGlobalParams::mesh_dim_x - 1 - s.x + s.y + NoximGlobalParams::mesh_dim_x - 1 - d.x + d.y;
+// 			if( TLA(p) && ( p.routing ==  ROUTING_WEST_FIRST || p.routing == ROUTING_XYZ ) && ( beltway_hop < min_hop )){
+// 				beltway = true;
+// 				routing = p.routing;
+// 				return mid;
+// 				}
+// 			//else
+// 			//	cout<<"fuck 2! sel_int_node_belt"<<endl;
+// 		}
+// 	}
+// 	 if ( s.x < d.x && beltway_decision ){
+// 		if( d.y > NoximGlobalParams::mesh_dim_y/2 ){
+// 			mid = xyz2Id( ring_level, NoximGlobalParams::mesh_dim_y - 1 - ring_level, d.z );
+// 			NoximPacket p( source, mid, 0, 2);
+// 			beltway_hop = s.x + NoximGlobalParams::mesh_dim_y - 1 - s.y + d.x + NoximGlobalParams::mesh_dim_y - 1 - d.y;
+// 			if( TLA(p) && ( p.routing == ROUTING_WEST_FIRST || p.routing == ROUTING_XYZ ) && ( beltway_hop < min_hop )){
+// 				beltway = true;
+// 				routing = p.routing;
+// 				return mid;
+// 				}
+// 			//else
+// 			//	cout<<"fuck 3! sel_int_node_belt"<<endl;
+// 		}
+// 		else{
+// 			mid = xyz2Id( ring_level, ring_level, d.z );
+// 			NoximPacket p( source, mid, 0, 2);
+// 			beltway_hop = s.x + s.y + d.x + d.y;
+// 			if( TLA(p) && ( p.routing == ROUTING_WEST_FIRST || p.routing == ROUTING_XYZ ) && ( beltway_hop < min_hop )){
+// 				beltway = true;
+// 				routing = p.routing;
+// 				return mid;
+// 				}
+// 			//else
+// 			//	cout<<"fuck 4! sel_int_node_belt"<<endl;
+// 		}
+// 	}
+// 	return coord2Id(m);
+// }
+// int NoximProcessingElement::sel_int_node_Mcascade(int source, int  destination) {
 	
-	assert(source      < MAX_ID + 1 );
-	assert(destination < MAX_ID + 1 );
-	NoximCoord s = id2Coord(source     ); //transfer source id to coordination
-	NoximCoord d = id2Coord(destination); //transfer destination id to coordination
-	NoximCoord m = id2Coord(sel_int_node(source,destination)); //intermediate node
-	if( m == s || m == d )
-		return coord2Id(m);
-	int i,j,k;
+// 	assert(source      < MAX_ID + 1 );
+// 	assert(destination < MAX_ID + 1 );
+// 	NoximCoord s = id2Coord(source     ); //transfer source id to coordination
+// 	NoximCoord d = id2Coord(destination); //transfer destination id to coordination
+// 	NoximCoord m = id2Coord(sel_int_node(source,destination)); //intermediate node
+// 	if( m == s || m == d )
+// 		return coord2Id(m);
+// 	int i,j,k;
 	
-	if( m.x != s.x){
-		if      ( abs(m.x - s.x) > 2 && abs(m.y - s.y) > 2 && NoximGlobalParams::Mcascade_step > 2){
-			if( ( _round_MC % 4 ) == 0 ){
-				if      ( m.x > s.x ) i = m.x - 3;
-				else if ( m.x < s.x ) i = m.x + 3;
-				else                  i = m.x    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
-					m.x = i;
-				}
-			else if( ( _round_MC % 4 ) == 1 ){
-				if      ( m.y > s.y ) i = m.y - 3;
-				else if ( m.y < s.y ) i = m.y + 3;
-				else                  i = m.y    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
-					m.y = i;
-			}
-			else if ( ( _round_MC % 4 ) == 2 ){
-				if      ( m.y > s.y ) i = m.y - 1;
-				else if ( m.y < s.y ) i = m.y + 1;
-				else                  i = m.y    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
-					m.y = i;
-				if      ( m.x > s.x ) i = m.x - 2;
-				else if ( m.x < s.x ) i = m.x + 2;
-				else                  i = m.x    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
-					m.x = i;
-			}
-			else {
-				if      ( m.y > s.y ) i = m.y - 2;
-				else if ( m.y < s.y ) i = m.y + 2;
-				else                  i = m.y    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
-					m.y = i;
-				if      ( m.x > s.x ) i = m.x - 1;
-				else if ( m.x < s.x ) i = m.x + 1;
-				else                  i = m.x    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
-					m.x = i;
-			}
-		}
-		else if      ( abs(m.x - s.x) > 1 && abs(m.y - s.y) > 1 && NoximGlobalParams::Mcascade_step > 1){
-			if( ( _round_MC % 3 ) == 0 ){
-				if      ( m.x > s.x ) i = m.x - 2;
-				else if ( m.x < s.x ) i = m.x + 2;
-				else                  i = m.x    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
-					m.x = i;
-				}
-			else if( ( _round_MC % 3 ) == 1 ){
-				if      ( m.y > s.y ) i = m.y - 2;
-				else if ( m.y < s.y ) i = m.y + 2;
-				else                  i = m.y    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
-					m.y = i;
-			}
-			else{
-				if      ( m.y > s.y ) i = m.y - 1;
-				else if ( m.y < s.y ) i = m.y + 1;
-				else                  i = m.y    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
-					m.y = i;
-				if      ( m.x > s.x ) i = m.x - 1;
-				else if ( m.x < s.x ) i = m.x + 1;
-				else                  i = m.x    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
-					m.x = i;
-			}
-		}
-		else if ( abs(m.x - s.x) > 0 && abs(m.y - s.y) > 0  && NoximGlobalParams::Mcascade_step > 0){
-			// if( ( rand() % 2 ) == 0 ){
-			if( ( _round_MC % 2 ) == 0 ){
-				if      ( m.x > s.x ) i = m.x - 1;
-				else if ( m.x < s.x ) i = m.x + 1;
-				else                  i = m.x    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
-					m.x = i;
-			}
-			else{
-				if      ( m.y > s.y ) i = m.y - 1;
-				else if ( m.y < s.y ) i = m.y + 1;
-				else                  i = m.y    ;
-				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
-					m.y = i;
-			}
-		}
-		else if ( NoximGlobalParams::Mcascade_step == 0){
-			return coord2Id(m);
+// 	if( m.x != s.x){
+// 		if      ( abs(m.x - s.x) > 2 && abs(m.y - s.y) > 2 && NoximGlobalParams::Mcascade_step > 2){
+// 			if( ( _round_MC % 4 ) == 0 ){
+// 				if      ( m.x > s.x ) i = m.x - 3;
+// 				else if ( m.x < s.x ) i = m.x + 3;
+// 				else                  i = m.x    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
+// 					m.x = i;
+// 				}
+// 			else if( ( _round_MC % 4 ) == 1 ){
+// 				if      ( m.y > s.y ) i = m.y - 3;
+// 				else if ( m.y < s.y ) i = m.y + 3;
+// 				else                  i = m.y    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
+// 					m.y = i;
+// 			}
+// 			else if ( ( _round_MC % 4 ) == 2 ){
+// 				if      ( m.y > s.y ) i = m.y - 1;
+// 				else if ( m.y < s.y ) i = m.y + 1;
+// 				else                  i = m.y    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
+// 					m.y = i;
+// 				if      ( m.x > s.x ) i = m.x - 2;
+// 				else if ( m.x < s.x ) i = m.x + 2;
+// 				else                  i = m.x    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
+// 					m.x = i;
+// 			}
+// 			else {
+// 				if      ( m.y > s.y ) i = m.y - 2;
+// 				else if ( m.y < s.y ) i = m.y + 2;
+// 				else                  i = m.y    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
+// 					m.y = i;
+// 				if      ( m.x > s.x ) i = m.x - 1;
+// 				else if ( m.x < s.x ) i = m.x + 1;
+// 				else                  i = m.x    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
+// 					m.x = i;
+// 			}
+// 		}
+// 		else if      ( abs(m.x - s.x) > 1 && abs(m.y - s.y) > 1 && NoximGlobalParams::Mcascade_step > 1){
+// 			if( ( _round_MC % 3 ) == 0 ){
+// 				if      ( m.x > s.x ) i = m.x - 2;
+// 				else if ( m.x < s.x ) i = m.x + 2;
+// 				else                  i = m.x    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
+// 					m.x = i;
+// 				}
+// 			else if( ( _round_MC % 3 ) == 1 ){
+// 				if      ( m.y > s.y ) i = m.y - 2;
+// 				else if ( m.y < s.y ) i = m.y + 2;
+// 				else                  i = m.y    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
+// 					m.y = i;
+// 			}
+// 			else{
+// 				if      ( m.y > s.y ) i = m.y - 1;
+// 				else if ( m.y < s.y ) i = m.y + 1;
+// 				else                  i = m.y    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
+// 					m.y = i;
+// 				if      ( m.x > s.x ) i = m.x - 1;
+// 				else if ( m.x < s.x ) i = m.x + 1;
+// 				else                  i = m.x    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
+// 					m.x = i;
+// 			}
+// 		}
+// 		else if ( abs(m.x - s.x) > 0 && abs(m.y - s.y) > 0  && NoximGlobalParams::Mcascade_step > 0){
+// 			// if( ( rand() % 2 ) == 0 ){
+// 			if( ( _round_MC % 2 ) == 0 ){
+// 				if      ( m.x > s.x ) i = m.x - 1;
+// 				else if ( m.x < s.x ) i = m.x + 1;
+// 				else                  i = m.x    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_x) )
+// 					m.x = i;
+// 			}
+// 			else{
+// 				if      ( m.y > s.y ) i = m.y - 1;
+// 				else if ( m.y < s.y ) i = m.y + 1;
+// 				else                  i = m.y    ;
+// 				if( (i > -1) && ( i < NoximGlobalParams::mesh_dim_y) )
+// 					m.y = i;
+// 			}
+// 		}
+// 		else if ( NoximGlobalParams::Mcascade_step == 0){
+// 			return coord2Id(m);
 			
-		}
-	}
-	_round_MC++;
-	return coord2Id(m);
-}
+// 		}
+// 	}
+// 	_round_MC++;
+// 	return coord2Id(m);
+// }
 
-bool NoximProcessingElement::inROC(NoximCoord s,NoximCoord d){
-	/*if(  ((d.x < _RoC_col_min) && ( s.x < _RoC_col_min)) ||
-	     ((d.x > _RoC_col_max) && ( s.x > _RoC_col_max)) ||
-		 ((d.x < _RoC_col_min) && ( s.x < _RoC_col_min)) ||
-		 ((d.y > _RoC_row_max) && ( s.x > _RoC_row_max)) 	)
-		return true;
-	else if( inROC_S(d) )
-    	return true;
-	else
-		return false;*/
-	return inROC_S(d);
-	// return false;
-}
+// bool NoximProcessingElement::inROC(NoximCoord s,NoximCoord d){
+// 	/*if(  ((d.x < _RoC_col_min) && ( s.x < _RoC_col_min)) ||
+// 	     ((d.x > _RoC_col_max) && ( s.x > _RoC_col_max)) ||
+// 		 ((d.x < _RoC_col_min) && ( s.x < _RoC_col_min)) ||
+// 		 ((d.y > _RoC_row_max) && ( s.x > _RoC_row_max)) 	)
+// 		return true;
+// 	else if( inROC_S(d) )
+//     	return true;
+// 	else
+// 		return false;*/
+// 	return inROC_S(d);
+// 	// return false;
+// }
 
-bool NoximProcessingElement::inROC_S(NoximCoord s){
-	if( s.x >= _RoC_col_min && s.x <= _RoC_col_max && 
-	    s.y >= _RoC_row_min && s.y <= _RoC_row_max )
-	   	return false;
-	else
-		return true;
-}
+// bool NoximProcessingElement::inROC_S(NoximCoord s){
+// 	if( s.x >= _RoC_col_min && s.x <= _RoC_col_max && 
+// 	    s.y >= _RoC_row_min && s.y <= _RoC_row_max )
+// 	   	return false;
+// 	else
+// 		return true;
+// }
 
-int NoximProcessingElement::inRing(NoximCoord dest){//Find the ring level of destination
-	//Find Min. of a,b,c,d
-	if( NoximGlobalParams::Mbeltway ){
-		return (int)( rand() % NoximGlobalParams::Sbeltway_ring );
-	}
-	else if( NoximGlobalParams::Sbeltway && NoximGlobalParams::Sbeltway_ring > -1 ){
-		return NoximGlobalParams::Sbeltway_ring;
-	}
-	else if( NoximGlobalParams::Sbeltway && NoximGlobalParams::Sbeltway_ring == -1){
-		int a = _RoC_col_min;
-		int b = NoximGlobalParams::mesh_dim_x - _RoC_col_max;
-		int c = _RoC_row_min;
-		int d = NoximGlobalParams::mesh_dim_y - _RoC_row_max;
-		int e = ( a < b )?a:b;
-		int f = ( c < d )?c:d;
-		int g = ( e < f )?e:f;
-		g--;
-		if ( g < 0 ) g = 0;
-		return g;
-	}
-	else{
-	int a = dest.x;
-	int b = NoximGlobalParams::mesh_dim_x - dest.x;
-	int c = dest.y;
-	int d = NoximGlobalParams::mesh_dim_y - dest.y;
-	int e = ( a < b )?a:b;
-	int f = ( c < d )?c:d;
-	int g = ( e < f )?e:f;
-	return g;
-	}
+// int NoximProcessingElement::inRing(NoximCoord dest){//Find the ring level of destination
+// 	//Find Min. of a,b,c,d
+// 	if( NoximGlobalParams::Mbeltway ){
+// 		return (int)( rand() % NoximGlobalParams::Sbeltway_ring );
+// 	}
+// 	else if( NoximGlobalParams::Sbeltway && NoximGlobalParams::Sbeltway_ring > -1 ){
+// 		return NoximGlobalParams::Sbeltway_ring;
+// 	}
+// 	else if( NoximGlobalParams::Sbeltway && NoximGlobalParams::Sbeltway_ring == -1){
+// 		int a = _RoC_col_min;
+// 		int b = NoximGlobalParams::mesh_dim_x - _RoC_col_max;
+// 		int c = _RoC_row_min;
+// 		int d = NoximGlobalParams::mesh_dim_y - _RoC_row_max;
+// 		int e = ( a < b )?a:b;
+// 		int f = ( c < d )?c:d;
+// 		int g = ( e < f )?e:f;
+// 		g--;
+// 		if ( g < 0 ) g = 0;
+// 		return g;
+// 	}
+// 	else{
+// 	int a = dest.x;
+// 	int b = NoximGlobalParams::mesh_dim_x - dest.x;
+// 	int c = dest.y;
+// 	int d = NoximGlobalParams::mesh_dim_y - dest.y;
+// 	int e = ( a < b )?a:b;
+// 	int f = ( c < d )?c:d;
+// 	int g = ( e < f )?e:f;
+// 	return g;
+// 	}
 	
-}
+// }
 
-bool NoximProcessingElement::_beltway_RND(NoximCoord s,NoximCoord d){
-	vector< int >minimal_path;
-	int beltway_path;
-	if( d.x > s.x ){
-		minimal_path.push_back(DIRECTION_EAST);
-		minimal_path.push_back(DIRECTION_WEST);
-		beltway_path = DIRECTION_WEST;
-	}
-	else if( d.x < s.x ){
-		minimal_path.push_back(DIRECTION_WEST);
-		minimal_path.push_back(DIRECTION_EAST);
-		beltway_path = DIRECTION_EAST;
-	}
-	else //not use beltway
-		return false;
-	if( d.y > s.y )
-		minimal_path.push_back(DIRECTION_SOUTH);
-	else if(d.y < s.y)
-		minimal_path.push_back(DIRECTION_NORTH);
-	if ( beltway_path == minimal_path[rand() % minimal_path.size()])
-		return true;
-	else
-		return false;
-}
+// bool NoximProcessingElement::_beltway_RND(NoximCoord s,NoximCoord d){
+// 	vector< int >minimal_path;
+// 	int beltway_path;
+// 	if( d.x > s.x ){
+// 		minimal_path.push_back(DIRECTION_EAST);
+// 		minimal_path.push_back(DIRECTION_WEST);
+// 		beltway_path = DIRECTION_WEST;
+// 	}
+// 	else if( d.x < s.x ){
+// 		minimal_path.push_back(DIRECTION_WEST);
+// 		minimal_path.push_back(DIRECTION_EAST);
+// 		beltway_path = DIRECTION_EAST;
+// 	}
+// 	else //not use beltway
+// 		return false;
+// 	if( d.y > s.y )
+// 		minimal_path.push_back(DIRECTION_SOUTH);
+// 	else if(d.y < s.y)
+// 		minimal_path.push_back(DIRECTION_NORTH);
+// 	if ( beltway_path == minimal_path[rand() % minimal_path.size()])
+// 		return true;
+// 	else
+// 		return false;
+// }
 
-bool NoximProcessingElement::_beltway_OBL(NoximCoord s,NoximCoord d){
-	vector< int >minimal_path;
-	int beltway_path;
-	if( d.x > s.x + 3 && s.x > 0){  //20130923
-		minimal_path.push_back(DIRECTION_EAST);
-		beltway_path = DIRECTION_WEST;
-	}
-	else if( d.x < s.x - 3 && s.x < 7){ //20130923
-		minimal_path.push_back(DIRECTION_WEST);
-		beltway_path = DIRECTION_EAST;
-	}
-	else //not use beltway
-		return false;
-	if( d.y > s.y)
-		minimal_path.push_back(DIRECTION_SOUTH);
-	else if(d.y < s.y)
-		minimal_path.push_back(DIRECTION_NORTH);
+// bool NoximProcessingElement::_beltway_OBL(NoximCoord s,NoximCoord d){
+// 	vector< int >minimal_path;
+// 	int beltway_path;
+// 	if( d.x > s.x + 3 && s.x > 0){  //20130923
+// 		minimal_path.push_back(DIRECTION_EAST);
+// 		beltway_path = DIRECTION_WEST;
+// 	}
+// 	else if( d.x < s.x - 3 && s.x < 7){ //20130923
+// 		minimal_path.push_back(DIRECTION_WEST);
+// 		beltway_path = DIRECTION_EAST;
+// 	}
+// 	else //not use beltway
+// 		return false;
+// 	if( d.y > s.y)
+// 		minimal_path.push_back(DIRECTION_SOUTH);
+// 	else if(d.y < s.y)
+// 		minimal_path.push_back(DIRECTION_NORTH);
 
-	for(int i = 0 ; i < minimal_path.size() ; i++){
-		if( free_slots_router[minimal_path[i]] > free_slots_router[beltway_path])
-			return false;
-	}
-	return true;
-}
+// 	for(int i = 0 ; i < minimal_path.size() ; i++){
+// 		if( free_slots_router[minimal_path[i]] > free_slots_router[beltway_path])
+// 			return false;
+// 	}
+// 	return true;
+// }
 
-bool NoximProcessingElement::_beltway_RCA(NoximCoord s,NoximCoord d){
-	int minimal_path;
-	int beltway_path;
-	if( d.x > s.x ){//EAST
-		if( d.y > s.y ){//SOUTH
-			minimal_path = (RCA_router[2*DIRECTION_EAST+1] + RCA_router[DIRECTION_SOUTH*2+0])/2;//SE
-			beltway_path = RCA_router[2*DIRECTION_WEST+0];//SW
-		}
-		else{//NORTH
-			minimal_path = (RCA_router[2*DIRECTION_EAST+0] + RCA_router[DIRECTION_NORTH*2+1])/2;//NE
-			beltway_path = RCA_router[2*DIRECTION_WEST+1];//WN
-		}
-	}
-	else if( d.x < s.x ){//WEST
-		if( d.x > s.y){//SOUTH
-			minimal_path = (RCA_router[2*DIRECTION_WEST+0] + RCA_router[DIRECTION_SOUTH*2+1])/2;//WS
-			beltway_path = RCA_router[2*DIRECTION_EAST+1];//ES
-		}
-		else{//NORTH
-			minimal_path =(RCA_router[2*DIRECTION_WEST+1] + RCA_router[DIRECTION_SOUTH*2+0])/2;//WSpush_back(2*DIRECTION_WEST+1);
-			beltway_path = RCA_router[2*DIRECTION_EAST+0];//EN 
-		}
-	}
-	else //not use beltway
-		return false;
-	if( minimal_path >= beltway_path )
-		return false;
-	else
-		return true;
-}
+// bool NoximProcessingElement::_beltway_RCA(NoximCoord s,NoximCoord d){
+// 	int minimal_path;
+// 	int beltway_path;
+// 	if( d.x > s.x ){//EAST
+// 		if( d.y > s.y ){//SOUTH
+// 			minimal_path = (RCA_router[2*DIRECTION_EAST+1] + RCA_router[DIRECTION_SOUTH*2+0])/2;//SE
+// 			beltway_path = RCA_router[2*DIRECTION_WEST+0];//SW
+// 		}
+// 		else{//NORTH
+// 			minimal_path = (RCA_router[2*DIRECTION_EAST+0] + RCA_router[DIRECTION_NORTH*2+1])/2;//NE
+// 			beltway_path = RCA_router[2*DIRECTION_WEST+1];//WN
+// 		}
+// 	}
+// 	else if( d.x < s.x ){//WEST
+// 		if( d.x > s.y){//SOUTH
+// 			minimal_path = (RCA_router[2*DIRECTION_WEST+0] + RCA_router[DIRECTION_SOUTH*2+1])/2;//WS
+// 			beltway_path = RCA_router[2*DIRECTION_EAST+1];//ES
+// 		}
+// 		else{//NORTH
+// 			minimal_path =(RCA_router[2*DIRECTION_WEST+1] + RCA_router[DIRECTION_SOUTH*2+0])/2;//WSpush_back(2*DIRECTION_WEST+1);
+// 			beltway_path = RCA_router[2*DIRECTION_EAST+0];//EN 
+// 		}
+// 	}
+// 	else //not use beltway
+// 		return false;
+// 	if( minimal_path >= beltway_path )
+// 		return false;
+// 	else
+// 		return true;
+// }
 
-bool NoximProcessingElement::_beltway_NoP(NoximCoord s,NoximCoord d){
-	vector< int >minimal_path;
-	vector< int >beltway_path;
-	if( d.x > s.x ){
-		minimal_path.push_back(DIRECTION_EAST);
-		beltway_path.push_back(DIRECTION_WEST);
-	}
-	else if( d.x < s.x ){
-		minimal_path.push_back(DIRECTION_WEST);
-		beltway_path.push_back(DIRECTION_EAST);
-	}
-	else //not use beltway
-		return false;
-	if( d.y > s.y )
-		minimal_path.push_back(DIRECTION_SOUTH);
-	else if(d.y < s.y)
-		minimal_path.push_back(DIRECTION_NORTH);
+// bool NoximProcessingElement::_beltway_NoP(NoximCoord s,NoximCoord d){
+// 	vector< int >minimal_path;
+// 	vector< int >beltway_path;
+// 	if( d.x > s.x ){
+// 		minimal_path.push_back(DIRECTION_EAST);
+// 		beltway_path.push_back(DIRECTION_WEST);
+// 	}
+// 	else if( d.x < s.x ){
+// 		minimal_path.push_back(DIRECTION_WEST);
+// 		beltway_path.push_back(DIRECTION_EAST);
+// 	}
+// 	else //not use beltway
+// 		return false;
+// 	if( d.y > s.y )
+// 		minimal_path.push_back(DIRECTION_SOUTH);
+// 	else if(d.y < s.y)
+// 		minimal_path.push_back(DIRECTION_NORTH);
 		
-	int beltway_score = _NoPScore(NoP_router[beltway_path[0]],beltway_path);
-	int minimal_score;
+// 	int beltway_score = _NoPScore(NoP_router[beltway_path[0]],beltway_path);
+// 	int minimal_score;
 	
-	if(minimal_path.size()==1){
-		minimal_score = _NoPScore(NoP_router[minimal_path[0]],minimal_path);
-		if(minimal_score >= beltway_score)
-			return false;
-		else
-			return true;
-	}else{
-		for(int i = 0 ; i < minimal_path.size() ; i++){
-			minimal_score = _NoPScore(NoP_router[minimal_path[i]],minimal_path)/2;			
-			if(minimal_score >= beltway_score)
-				return false;
-			else
-				return true;
+// 	if(minimal_path.size()==1){
+// 		minimal_score = _NoPScore(NoP_router[minimal_path[0]],minimal_path);
+// 		if(minimal_score >= beltway_score)
+// 			return false;
+// 		else
+// 			return true;
+// 	}else{
+// 		for(int i = 0 ; i < minimal_path.size() ; i++){
+// 			minimal_score = _NoPScore(NoP_router[minimal_path[i]],minimal_path)/2;			
+// 			if(minimal_score >= beltway_score)
+// 				return false;
+// 			else
+// 				return true;
 	
-		}
-	}
-}
+// 		}
+// 	}
+// }
 
-bool NoximProcessingElement::_beltway_THERMAL(NoximCoord s,NoximCoord d){
+// bool NoximProcessingElement::_beltway_THERMAL(NoximCoord s,NoximCoord d){
 
-	vector< int >minimal_path;
-	double minimal_budget;
-	int beltway_path;
-	double beltway_budget;
-	//return false;
+// 	vector< int >minimal_path;
+// 	double minimal_budget;
+// 	int beltway_path;
+// 	double beltway_budget;
+// 	//return false;
 	
-	if( d.x > s.x + 3 ){
-		minimal_path.push_back(DIRECTION_EAST);
-		minimal_budget = minimal_budget + MTTT[s.x+1][s.y][s.z]; // accumulative way		
-		beltway_path = DIRECTION_WEST;
-		if(s.x > 0)
-			beltway_budget = MTTT[s.x-1][s.y][s.z];
-		else
-			beltway_budget = 0;
-	}
-	else if( d.x < s.x - 3 ){
-		minimal_path.push_back(DIRECTION_WEST);
-		minimal_budget = minimal_budget + MTTT[s.x-1][s.y][s.z];		
-		beltway_path = DIRECTION_EAST;
-		if(s.x < 7)
-			beltway_budget = MTTT[s.x+1][s.y][s.z];
-		else
-			beltway_budget = 0;
-	}
-	else
-		return false;
+// 	if( d.x > s.x + 3 ){
+// 		minimal_path.push_back(DIRECTION_EAST);
+// 		minimal_budget = minimal_budget + MTTT[s.x+1][s.y][s.z]; // accumulative way		
+// 		beltway_path = DIRECTION_WEST;
+// 		if(s.x > 0)
+// 			beltway_budget = MTTT[s.x-1][s.y][s.z];
+// 		else
+// 			beltway_budget = 0;
+// 	}
+// 	else if( d.x < s.x - 3 ){
+// 		minimal_path.push_back(DIRECTION_WEST);
+// 		minimal_budget = minimal_budget + MTTT[s.x-1][s.y][s.z];		
+// 		beltway_path = DIRECTION_EAST;
+// 		if(s.x < 7)
+// 			beltway_budget = MTTT[s.x+1][s.y][s.z];
+// 		else
+// 			beltway_budget = 0;
+// 	}
+// 	else
+// 		return false;
 		
-	if( d.y > s.y){
-		minimal_path.push_back(DIRECTION_SOUTH);
-		minimal_budget = minimal_budget + MTTT[s.x][s.y+1][s.z];	
-	}	
-	else if(d.y < s.y){
-		minimal_path.push_back(DIRECTION_NORTH);
-		minimal_budget = minimal_budget + MTTT[s.x][s.y-1][s.z];	
-	}
-	else
-		return false;
-	// budget normalization
-	double beltway_budget_normal = fabs(beltway_budget)/(fabs(beltway_budget) + fabs(minimal_budget));//fabs(beltway_budget)/(fabs(beltway_budget) + fabs(minimal_budget));
-	double rand_num = (double)rand()/(double)RAND_MAX;
-	//if(_beltway_RCA(s, d)){
-		if(beltway_budget <0)
-			return false;
-		else if(minimal_budget <0)
-			return true;
-		else if(beltway_budget==0 && minimal_budget==0)
-			return _beltway_RCA(s, d);
-		else{
-			if( rand_num < beltway_budget_normal){
-				return true;
-			}
-			else{ 
-				return false;
-			}
-		}
-	//}
-	//else
-	//	return false;
+// 	if( d.y > s.y){
+// 		minimal_path.push_back(DIRECTION_SOUTH);
+// 		minimal_budget = minimal_budget + MTTT[s.x][s.y+1][s.z];	
+// 	}	
+// 	else if(d.y < s.y){
+// 		minimal_path.push_back(DIRECTION_NORTH);
+// 		minimal_budget = minimal_budget + MTTT[s.x][s.y-1][s.z];	
+// 	}
+// 	else
+// 		return false;
+// 	// budget normalization
+// 	double beltway_budget_normal = fabs(beltway_budget)/(fabs(beltway_budget) + fabs(minimal_budget));//fabs(beltway_budget)/(fabs(beltway_budget) + fabs(minimal_budget));
+// 	double rand_num = (double)rand()/(double)RAND_MAX;
+// 	//if(_beltway_RCA(s, d)){
+// 		if(beltway_budget <0)
+// 			return false;
+// 		else if(minimal_budget <0)
+// 			return true;
+// 		else if(beltway_budget==0 && minimal_budget==0)
+// 			return _beltway_RCA(s, d);
+// 		else{
+// 			if( rand_num < beltway_budget_normal){
+// 				return true;
+// 			}
+// 			else{ 
+// 				return false;
+// 			}
+// 		}
+// 	//}
+// 	//else
+// 	//	return false;
 	
-}
+// }
 
-int NoximProcessingElement::_NoPScore(const NoximNoP_data & nop_data,
-			  const vector < int >&nop_channels)
-{
-    int score = 0;
+// int NoximProcessingElement::_NoPScore(const NoximNoP_data & nop_data,
+// 			  const vector < int >&nop_channels)
+// {
+//     int score = 0;
 	
-    for (unsigned int i = 0; i < nop_channels.size(); i++) {
-		int available;
-		if (nop_data.channel_status_neighbor[nop_channels[i]].available)available = 1;
-		else			available = 0;
-		int free_slots = nop_data.channel_status_neighbor[nop_channels[i]].free_slots;
-		score += (int) available*free_slots; //traffic-&throttling-aware
-    }
+//     for (unsigned int i = 0; i < nop_channels.size(); i++) {
+// 		int available;
+// 		if (nop_data.channel_status_neighbor[nop_channels[i]].available)available = 1;
+// 		else			available = 0;
+// 		int free_slots = nop_data.channel_status_neighbor[nop_channels[i]].free_slots;
+// 		score += (int) available*free_slots; //traffic-&throttling-aware
+//     }
 
-    return score;
-}
+//     return score;
+// }
 
 void NoximProcessingElement::_flit_static(NoximFlit flit_tmp){
 	_Transient_total_transmit++;

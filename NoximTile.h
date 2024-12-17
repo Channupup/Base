@@ -38,16 +38,16 @@ SC_MODULE(NoximTile)
 	sc_in<bool>		  on_off_neighbor[DIRECTIONS];
 	
 	/*******TB*******/
-	sc_out<float>	  TB[DIRECTIONS];
-	sc_in<float>		  TB_neighbor[DIRECTIONS];	
+	// sc_out<float>	  TB[DIRECTIONS];
+	// sc_in<float>		  TB_neighbor[DIRECTIONS];	
 
-	/*******PDT*******/
-        sc_out<float>     PDT[DIRECTIONS];
-        sc_in<float>      PDT_neighbor[DIRECTIONS];
+	// /*******PDT*******/
+    // sc_out<float>     PDT[DIRECTIONS];
+    // sc_in<float>      PDT_neighbor[DIRECTIONS];
 
-	/*******buf info*******/
-        sc_out<float>     buf[DIRECTIONS+2][DIRECTIONS];
-        sc_in<float>      buf_neighbor[DIRECTIONS+2][DIRECTIONS];
+	// /*******buf info*******/
+    // sc_out<float>     buf[DIRECTIONS+2][DIRECTIONS];
+    // sc_in<float>      buf_neighbor[DIRECTIONS+2][DIRECTIONS];
 /*
         sc_out<float>     buf1[DIRECTIONS];
         sc_in<float>      buf1_neighbor[DIRECTIONS];
@@ -73,17 +73,17 @@ SC_MODULE(NoximTile)
 
 	/*******RCA******/
 	// Derek----
-	sc_in<int>         RCA_data_in[8];
-	sc_out<int>        RCA_data_out[8];
-	sc_out<double>	  monitor_out[DIRECTIONS];
-	sc_in<double>		  monitor_in[DIRECTIONS];
+	// sc_in<int>         	RCA_data_in[8];
+	// sc_out<int>        	RCA_data_out[8];
+	// sc_out<double>	  	monitor_out[DIRECTIONS];
+	// sc_in<double>		monitor_in[DIRECTIONS];
 	/*******RCA******/
     // NoP related I/O
-    sc_out < NoximNoP_data > NoP_data_out[DIRECTIONS];
-    sc_in < NoximNoP_data > NoP_data_in[DIRECTIONS];
+    // sc_out < NoximNoP_data > NoP_data_out[DIRECTIONS];
+    // sc_in  < NoximNoP_data > NoP_data_in[DIRECTIONS];
 	//
-	sc_out < NoximNoP_data > vertical_free_slot_out;
-    sc_in  < NoximNoP_data > vertical_free_slot_in[4];
+	// sc_out < NoximNoP_data > vertical_free_slot_out;
+    // sc_in  < NoximNoP_data > vertical_free_slot_in[4];
     // Signals
     sc_signal <NoximFlit> flit_rx_local;	    // The input channels	
     sc_signal <bool>       req_rx_local;        // The requests associated with the input channels
@@ -106,9 +106,9 @@ SC_MODULE(NoximTile)
     //sc_signal <int> free_slots_semi_local;
     //sc_signal <int> free_slots_neighbor_semi_local;
 	//Beltway
-	sc_signal <int> free_slots_neighbor_router[4];
-	sc_signal <int> RCA_PE_router[8];
-	sc_signal <NoximNoP_data> NoP_PE_router[4];
+	//sc_signal <int> free_slots_neighbor_router[4];
+	// sc_signal <int> RCA_PE_router[8];
+	// sc_signal <NoximNoP_data> NoP_PE_router[4];
 	// Instances
     NoximRouter *r;		                // Router instance
     NoximProcessingElement *pe;	                // Processing Element instance
@@ -137,47 +137,47 @@ SC_MODULE(NoximTile)
 		r->free_slots_neighbor[i] (free_slots_neighbor[i]);
 		
 	    // NoP 
-	    r->NoP_data_out[i] (NoP_data_out[i]);
-	    r->NoP_data_in[i] (NoP_data_in[i]);
+	    // r->NoP_data_out[i] (NoP_data_out[i]);
+	    // r->NoP_data_in [i] (NoP_data_in[i]);
 		/*******RCA******/
-		if( i < 4){		
-		r->RCA_data_out[i*2+0](RCA_data_out[i*2+0]);
-        r->RCA_data_out[i*2+1](RCA_data_out[i*2+1]);
-        r->RCA_data_in[i*2+0](RCA_data_in[i*2+0]);
-        r->RCA_data_in[i*2+1](RCA_data_in[i*2+1]); 
-		}
-		r->monitor_out[i](monitor_out[i]);
-		r->monitor_in[i](monitor_in[i]);
+		// if( i < 4){		
+		// r->RCA_data_out[i*2+0](RCA_data_out[i*2+0]);
+        // r->RCA_data_out[i*2+1](RCA_data_out[i*2+1]);
+        // r->RCA_data_in[i*2+0](RCA_data_in[i*2+0]);
+        // r->RCA_data_in[i*2+1](RCA_data_in[i*2+1]); 
+		// }
+		// r->monitor_out[i](monitor_out[i]);
+		// r->monitor_in[i](monitor_in[i]);
 		
-		r->TB[i](TB[i]);
-		r->TB_neighbor[i](TB_neighbor[i]);
+		// r->TB[i](TB[i]);
+		// r->TB_neighbor[i](TB_neighbor[i]);
 
-		r->buf[0][i](buf[0][i]);
-                r->buf_neighbor[0][i](buf_neighbor[0][i]);
+		// r->buf[0][i](buf[0][i]);
+        //         r->buf_neighbor[0][i](buf_neighbor[0][i]);
 
-		r->buf[1][i](buf[1][i]);
-                r->buf_neighbor[1][i](buf_neighbor[1][i]);
+		// r->buf[1][i](buf[1][i]);
+        //         r->buf_neighbor[1][i](buf_neighbor[1][i]);
 
-		r->buf[2][i](buf[2][i]);
-                r->buf_neighbor[2][i](buf_neighbor[2][i]);
+		// r->buf[2][i](buf[2][i]);
+        //         r->buf_neighbor[2][i](buf_neighbor[2][i]);
 
-		r->buf[3][i](buf[3][i]);
-                r->buf_neighbor[3][i](buf_neighbor[3][i]);
+		// r->buf[3][i](buf[3][i]);
+        //         r->buf_neighbor[3][i](buf_neighbor[3][i]);
 
-		r->buf[4][i](buf[4][i]);
-                r->buf_neighbor[4][i](buf_neighbor[4][i]);
+		// r->buf[4][i](buf[4][i]);
+        //         r->buf_neighbor[4][i](buf_neighbor[4][i]);
 
-		r->buf[5][i](buf[5][i]);
-                r->buf_neighbor[5][i](buf_neighbor[5][i]);
+		// r->buf[5][i](buf[5][i]);
+        //         r->buf_neighbor[5][i](buf_neighbor[5][i]);
 
-		r->buf[6][i](buf[6][i]);
-                r->buf_neighbor[6][i](buf_neighbor[6][i]);
+		// r->buf[6][i](buf[6][i]);
+        //         r->buf_neighbor[6][i](buf_neighbor[6][i]);
 
-		r->buf[7][i](buf[7][i]);
-                r->buf_neighbor[7][i](buf_neighbor[7][i]);	
+		// r->buf[7][i](buf[7][i]);
+        //         r->buf_neighbor[7][i](buf_neighbor[7][i]);	
 
-		r->PDT[i](PDT[i]);
-                r->PDT_neighbor[i](PDT_neighbor[i]);
+		// r->PDT[i](PDT[i]);
+        //         r->PDT_neighbor[i](PDT_neighbor[i]);
 		
 		r->on_off[i](on_off[i]);
 		r->on_off_neighbor[i](on_off_neighbor[i]);
@@ -188,9 +188,9 @@ SC_MODULE(NoximTile)
 		r->on_off_neighbor[i](on_off_neighbor[i]);
 	}*/
 
-	for (i=0; i<NoximGlobalParams::mesh_dim_z;i++)
-	r->vertical_free_slot_in[i](vertical_free_slot_in[i]);
-	r->vertical_free_slot_out(vertical_free_slot_out);
+	// for (i=0; i<NoximGlobalParams::mesh_dim_z;i++)
+	// r->vertical_free_slot_in[i](vertical_free_slot_in[i]);
+	// r->vertical_free_slot_out(vertical_free_slot_out);
 
 	r->flit_rx[DIRECTION_LOCAL     ] (flit_tx_local     );
 	r->req_rx [DIRECTION_LOCAL     ] (req_tx_local      );
@@ -238,18 +238,18 @@ SC_MODULE(NoximTile)
 	pe->free_slots_neighbor(free_slots_local);
 	
 		//Beltway 
-		for( i = 0 ; i < 4 ; i++){
-		r->free_slots_PE[i](free_slots_neighbor_router[i]);
-		pe->free_slots_router[i](free_slots_neighbor_router[i]);
-		}
-		for( i = 0 ; i < 8 ; i++){
-			r ->RCA_PE[i](RCA_PE_router[i]);
-			pe->RCA_router[i](RCA_PE_router[i]);
-		}
-		for( i = 0 ; i < 4 ; i++){
-			r->NoP_PE[i](NoP_PE_router[i]);
-			pe->NoP_router[i](NoP_PE_router[i]);
-		}
+		// for( i = 0 ; i < 4 ; i++){
+		// r->free_slots_PE[i](free_slots_neighbor_router[i]);
+		// pe->free_slots_router[i](free_slots_neighbor_router[i]);
+		// }
+		// for( i = 0 ; i < 8 ; i++){
+		// 	r ->RCA_PE[i](RCA_PE_router[i]);
+		// 	pe->RCA_router[i](RCA_PE_router[i]);
+		// }
+		// for( i = 0 ; i < 4 ; i++){
+		// 	r->NoP_PE[i](NoP_PE_router[i]);
+		// 	pe->NoP_router[i](NoP_PE_router[i]);
+		// }
     }
 
 };

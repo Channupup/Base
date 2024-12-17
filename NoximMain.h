@@ -501,6 +501,10 @@ inline int xyz2Id( int x, int y, int z){
 
 inline string MarkFileName( string name ){
 	char temperal [20];
+	time_t tt;
+	struct tm *pp;
+	char buf[128];
+	pair < int, double > t = NoximGlobalParams::hotspots.front();
 	sprintf( temperal, "%d", NoximGlobalParams::routing_algorithm);
 	if      ( NoximGlobalParams::routing_algorithm == ROUTING_DLADR ){
 		if ( NoximGlobalParams::cascade_node ){
@@ -517,29 +521,34 @@ inline string MarkFileName( string name ){
 	else if ( NoximGlobalParams::routing_algorithm == ROUTING_DLDR  )
 		name =name  + "_DLDR";
 	else
-		name =name  + "_routing-" + temperal;
+		name =name  + "_rt-" + temperal;
 	
 	sprintf( temperal, "%d", NoximGlobalParams::selection_strategy);
 	name  = name + "_sel-" + temperal;
-	sprintf( temperal, "%d", NoximGlobalParams::dw_layer_sel);
-	if      ( NoximGlobalParams::dw_layer_sel == DW_BL    )
-		name =name  + "_BL";
-	else if ( NoximGlobalParams::dw_layer_sel == DW_ODWL  )
-		name =name  + "_ODWL";
-	else if ( NoximGlobalParams::dw_layer_sel == DW_ADWL  )
-		name =name  + "_ADWL";
-	else if ( NoximGlobalParams::dw_layer_sel == DW_IPD   )
-		name =name  + "_IPD";
-	else if ( NoximGlobalParams::dw_layer_sel == DW_ODWL_IPD   )
-		name =name  + "_ODWL_IPD";
-	else if ( NoximGlobalParams::dw_layer_sel == DW_VBDR   )
-		name =name  + "_VBDR";
-	else
-	name  = name + "_DW-sel-" + temperal;
-	sprintf( temperal, "%f", NoximGlobalParams::packet_injection_rate);
+	sprintf( temperal, "%.4f", NoximGlobalParams::packet_injection_rate);
 	name = name  + "_pir-" + temperal;
+	// sprintf( temperal, "%.1f",  NoximGlobalParams::threshold_para);
+	// name = name  + "_th-" + temperal;
+	// sprintf( temperal, "%d",  NoximGlobalParams::pre);
+	// name = name  + "_pre-" + temperal;
+	// sprintf( temperal, "%d",  NoximGlobalParams::steplen);
+	// name = name  + "_step-" + temperal;
 	sprintf( temperal, "%d", NoximGlobalParams::traffic_distribution);
-	name = name + "_traffic-" + temperal + +".txt";
+	if(NoximGlobalParams::traffic_distribution==TRAFFIC_TABLE_BASED){
+		name = name + "_traffic-" + temperal +"_"+ NoximGlobalParams::traffic_table_filename;
+	}
+	else
+		name = name + "_traffic-" + temperal +"_not_table" ;
+	time(&tt);
+	pp = gmtime(&tt);
+	
+
+
+	sprintf( temperal, "%d", pp->tm_hour);
+	name = name + "_time-" + temperal;
+	sprintf( temperal, "%d", pp->tm_min);
+	name = name + "_" + temperal+ ".txt";
+	
 	return name;
 }
 

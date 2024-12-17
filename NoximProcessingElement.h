@@ -44,9 +44,9 @@ SC_MODULE(NoximProcessingElement)
 	sc_out <int >free_slots;
     sc_in < int >free_slots_neighbor;
 	//OBL for beltway, 
-	sc_in < int >free_slots_router[4];
-	sc_in < int >RCA_router[8];
-	sc_in < NoximNoP_data > NoP_router[4];
+	// sc_in < int >free_slots_router[4];
+	// sc_in < int >RCA_router[8];
+	// sc_in < NoximNoP_data > NoP_router[4];
 
     // Registers
     int  local_id;			            // Unique identification number
@@ -65,13 +65,13 @@ SC_MODULE(NoximProcessingElement)
     void TraffThrottlingProcess();
 	bool TLA    (NoximPacket & packet );// Transport Layer Assisted
 	bool TAAR    (NoximPacket & packet );
-	bool Beltway(NoximPacket & packet );// Beltway Routing
-	int  sel_int_node(int source, int destination); //select a suitable intermedium node (Jimmy modified on 2011.06.08)
-	int  sel_int_node_belt (int source, int destination, bool &beltway,int &routing);
-	int  sel_int_node_Mcascade(int source, int  destination);
-	bool inROC(NoximCoord s, NoximCoord d);
-	bool inROC_S(NoximCoord s);
-	int  inRing(NoximCoord d);
+	//bool Beltway(NoximPacket & packet );// Beltway Routing
+	//int  sel_int_node(int source, int destination); //select a suitable intermedium node (Jimmy modified on 2011.06.08)
+	//int  sel_int_node_belt (int source, int destination, bool &beltway,int &routing);
+	//int  sel_int_node_Mcascade(int source, int  destination);
+	//bool inROC(NoximCoord s, NoximCoord d);
+	//bool inROC_S(NoximCoord s);
+	//int  inRing(NoximCoord d);
 	void IntoEmergency();
 	void OutOfEmergency();
 	void IntoCleanStage();
@@ -93,8 +93,8 @@ SC_MODULE(NoximProcessingElement)
     NoximPacket trafficBitReversal();	// Bit-reversal destination distribution
     NoximPacket trafficShuffle();		// Shuffle destination distribution
     NoximPacket trafficButterfly();		// Butterfly destination distribution
-	NoximPacket trafficRandom_Tvar();
-	NoximFlit   flit_redir();           // Redirect the flit while this PE is an intermedium node (Jimmy modified on 2011.10.25)
+	//NoximPacket trafficRandom_Tvar();
+	//NoximFlit   flit_redir();           // Redirect the flit while this PE is an intermedium node (Jimmy modified on 2011.10.25)
 	
 	//static functions
 	void ResetTransient_Transmit();
@@ -184,13 +184,13 @@ SC_MODULE(NoximProcessingElement)
 		int _throttling[20][20][4];
 		
 		void    _flit_static(NoximFlit flit);
-		bool    _beltway_OBL(NoximCoord s,NoximCoord d);
-		bool    _beltway_RCA(NoximCoord s,NoximCoord d);
-		bool    _beltway_RND(NoximCoord s,NoximCoord d);
-		bool    _beltway_NoP(NoximCoord s,NoximCoord d);	
-		bool    _beltway_THERMAL(NoximCoord s,NoximCoord d);		// Derek 2012.12.21
-		int     _NoPScore(const NoximNoP_data & nop_data, const vector < int >&nop_channels);
-		void    _updateRMM( int ***throt_table );
+		//bool    _beltway_OBL(NoximCoord s,NoximCoord d);
+		//bool    _beltway_RCA(NoximCoord s,NoximCoord d);
+		//bool    _beltway_RND(NoximCoord s,NoximCoord d);
+		//bool    _beltway_NoP(NoximCoord s,NoximCoord d);	
+		//bool    _beltway_THERMAL(NoximCoord s,NoximCoord d);		// Derek 2012.12.21
+		//int     _NoPScore(const NoximNoP_data & nop_data, const vector < int >&nop_channels);
+		//void    _updateRMM( int ***throt_table );
 };
 
 #endif

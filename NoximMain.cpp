@@ -21,6 +21,7 @@ unsigned int drained_volume;
 ofstream results_log_pwr;           //Initial in NoximLog, record in thermal_IF.cpp
 ofstream transient_log_throughput;  //Initial in NoximLog, record in NoximNoC.cpp
 ofstream transient_topology;
+ofstream traffic_analysis;
 // Initialize global configuration parameters (can be overridden with command-line arguments)
 int                          NoximGlobalParams::verbose_mode                  = DEFAULT_VERBOSE_MODE;
 int                          NoximGlobalParams::trace_mode                    = DEFAULT_TRACE_MODE;
@@ -48,7 +49,8 @@ vector <pair <int, double> > NoximGlobalParams::hotspots;
 int                          NoximGlobalParams::dw_layer_sel                  = DEFAULT_DW_LAYER_SEL;
 int                          NoximGlobalParams::throt_type                    = DEFAULT_THROTTLING_TYPE;
 int                          NoximGlobalParams::down_level                    = DEFAULT_DOWN_LEVEL;
-float	                     NoximGlobalParams::throt_ratio	                  = DEFAULT_THROTTLING_RATIO;bool                         NoximGlobalParams::buffer_alloc                  = DEFAULT_BUFFER_ALLOC;
+float	                     NoximGlobalParams::throt_ratio	                  = DEFAULT_THROTTLING_RATIO;
+bool                         NoximGlobalParams::buffer_alloc                  = DEFAULT_BUFFER_ALLOC;
 int                          NoximGlobalParams::vertical_link                 = DEFAULT_VERTICAL_LINK;
 bool                         NoximGlobalParams::cascade_node                  = DEFAULT_CASCADE_NODE;
 bool                         NoximGlobalParams::Mcascade                      = DEFAULT_MCASCADE;
@@ -96,6 +98,7 @@ int sc_main(int arg_num, char *arg_vet[])
 	if (NoximGlobalParams::trace_mode)log.TraceSignal(n);
 	log.PowerLog();//Transient power tracefile 
 	log.Throughput();
+	log.TrafficLog();
 	
     // Reset the chip and run the simulation
     reset.write(1);
@@ -130,6 +133,7 @@ int sc_main(int arg_num, char *arg_vet[])
 	log.TrafficLog(n);
 	log.PowerLogEnd();
 	log.ThroughputEnd();
+	log.TrafficLogEnd();
 	
     // Show statistics
     NoximGlobalStats gs(n);
