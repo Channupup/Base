@@ -110,70 +110,70 @@ SC_MODULE(NoximNoC)
 	sc_signal<float>	TB_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 
 	sc_signal<float>        PDT_to_east                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        PDT_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        PDT_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        PDT_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        PDT_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        PDT_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        PDT_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        PDT_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        PDT_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        PDT_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        PDT_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 
 
-	sc_signal<float>        buf0_to_east                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf0_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf0_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf0_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf0_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf0_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf0_to_east                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf0_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf0_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf0_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf0_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf0_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 
 	sc_signal<float>        buf1_to_east                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf1_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf1_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf1_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf1_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf1_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf1_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf1_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf1_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf1_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf1_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 
 	sc_signal<float>        buf2_to_east                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf2_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf2_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf2_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf2_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf2_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf2_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf2_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf2_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf2_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf2_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 
 	sc_signal<float>        buf3_to_east                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf3_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf3_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf3_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf3_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf3_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf3_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf3_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf3_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf3_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf3_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 	
 	sc_signal<float>        buf4_to_east                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf4_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf4_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf4_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf4_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf4_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf4_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf4_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf4_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf4_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf4_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 
 	sc_signal<float>        buf5_to_east                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf5_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf5_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf5_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf5_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf5_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf5_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf5_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf5_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf5_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf5_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 
 	sc_signal<float>        buf6_to_east                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf6_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf6_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf6_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf6_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf6_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf6_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf6_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf6_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf6_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf6_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 
 	sc_signal<float>        buf7_to_east                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf7_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf7_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf7_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf7_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
-	sc_signal<float>        buf7_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf7_to_west                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf7_to_south                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf7_to_north                [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf7_to_up                   [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+        sc_signal<float>        buf7_to_down                 [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 
-	//sc_signal< NoximNoP_data > vertical_free_slot  [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
+	sc_signal< NoximNoP_data > vertical_free_slot  [MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1][MAX_STATIC_DIM + 1];
 	// Matrix of tiles
     NoximTile  *t[MAX_STATIC_DIM][MAX_STATIC_DIM][MAX_STATIC_DIM];
 	NoximVLink *v[MAX_STATIC_DIM][MAX_STATIC_DIM];
@@ -224,6 +224,7 @@ SC_MODULE(NoximNoC)
 		//Temperature trace 
 		vector<double> TemperatureTrace;
         void setTemperature();
+		void PRETempLog();
 		void calROC(int &col_max, int &col_min, int &row_max, int &row_min,int non_beltway_layer);
 		void setCleanStage();
 		void EndCleanStage();
@@ -234,7 +235,7 @@ SC_MODULE(NoximNoC)
 		void _setThrot(int i, int j, int k);
 		void _setNormal(int i, int j, int k);
 		bool _equal(int x, int y, int z, int m, int n, int o);
-		//bool _CleanDone();
+		bool _CleanDone();
 		bool _emergency;
 		bool _clean;
 };
