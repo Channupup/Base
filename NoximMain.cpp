@@ -22,6 +22,7 @@ ofstream results_log_pwr;           //Initial in NoximLog, record in thermal_IF.
 ofstream transient_log_throughput;  //Initial in NoximLog, record in NoximNoC.cpp
 ofstream transient_topology;
 ofstream traffic_analysis;
+ofstream pretemp_file;
 // Initialize global configuration parameters (can be overridden with command-line arguments)
 int                          NoximGlobalParams::verbose_mode                  = DEFAULT_VERBOSE_MODE;
 int                          NoximGlobalParams::trace_mode                    = DEFAULT_TRACE_MODE;

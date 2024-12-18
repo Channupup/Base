@@ -5,6 +5,7 @@ extern ofstream results_log_pwr;
 extern ofstream transient_log_throughput;
 extern ofstream transient_topology;
 extern ofstream traffic_analysis;
+extern ofstream pretemp_file;
 void NoximLog::BufferLog( NoximNoC *n ){
 	ofstream results_buffer;
 	if(!mkdir("results/buffer",0777)) cout<<"Making new directory results/buffer"<<endl;
@@ -343,8 +344,15 @@ void NoximLog::TrafficLog( ){
 	traffic_analysis.open(filename.c_str(),ios::out|ios::app);
 	if(!traffic_analysis.is_open())
 		cout<<"Cannot open "<< filename.c_str() <<endl;
+
+	if(!mkdir("results/PRE", 0777)) cout<<"Making new directory results/TEMP"<<endl;
+	string filename2 = string("reuslts/PRE/pre");
+	filename2 = MarkFileName(filename2);
+	pretemp_file.open(filename2.c_str(), ios::out | ios::app);
+	if(!pretemp_file.is_open()) cout<<"open file "<< filename2.c_str() << "failed!"<<endl;
 }
 
 void NoximLog::TrafficLogEnd( ){
 	traffic_analysis.close();
+	pretemp_file.close();
 }
