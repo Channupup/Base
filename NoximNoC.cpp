@@ -26,7 +26,7 @@ bool throttling[20][20][4];
 extern ofstream transient_log_throughput;
 extern ofstream transient_topology;
 extern ofstream traffic_analysis;
-
+extern ofstream pretemp_file;
 void NoximNoC::buildMesh()
 {
 	cout<<"Start buildMesh..."<<endl;
@@ -632,6 +632,7 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 				transPwr2PtraceFile();
 				HS_interface->Temperature_calc(instPowerTrace, TemperatureTrace);
 				setTemperature();
+				PRETempLog();
 			}
 			//check temperature, whether set emergency mode or not
 			EmergencyDecision();
@@ -890,11 +891,11 @@ void NoximNoC::setTemperature(){
 	int m, n, o;
     int idx = 0;
 	// temperature prediction-----
-	// double current_temp; 
-	// double current_delta_temp; 
-	// double pre_delta_temp; 
-	// double pre_current_temp;
-	// double adjustment; 
+	double current_temp; 
+	double current_delta_temp; 
+	double pre_delta_temp; 
+	double pre_current_temp;
+	double adjustment; 
 	//double consumption_rate[20][20][4];	
 	
 	
@@ -915,75 +916,75 @@ void NoximNoC::setTemperature(){
 		// 	temp_budget[m][n][o] = 0;	
 		//thermal prediction
 
-		// if(t[m][n][o]->r->stats.temperature > 85)
-		// {
-		// 	current_temp = t[m][n][o]->r->stats.temperature;
-		// 	current_delta_temp = t[m][n][o]->r->stats.temperature - t[m][n][o]->r->stats.last_temperature;
+		//if(t[m][n][o]->r->stats.temperature > 85)
+		if(getCurrentCycleNum()/TEMP_REPORT_PERIOD > 5)
+		{
+			current_temp = t[m][n][o]->r->stats.temperature;
+			current_delta_temp = t[m][n][o]->r->stats.temperature - t[m][n][o]->r->stats.last_temperature;
 
-		// 	if(current_delta_temp < 0){
-		// 		pre_delta_temp = t[m][n][o]->r->stats.last_pre_temperature1 - t[m][n][o]->r->stats.last_temperature;
-		// 		pre_current_temp = t[m][n][o]->r->stats.last_pre_temperature1;
-		// 		adjustment = t[m][n][o]->r->stats.last_pre_temperature1 - current_temp;
+			if(current_delta_temp < 0){
+				pre_delta_temp = t[m][n][o]->r->stats.last_pre_temperature1 - t[m][n][o]->r->stats.last_temperature;
+				pre_current_temp = t[m][n][o]->r->stats.last_pre_temperature1;
+				adjustment = t[m][n][o]->r->stats.last_pre_temperature1 - current_temp;
 				
-		// 		t[m][n][o]->r->stats.pre_temperature1 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) - adjustment;
-		// 		//if(TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1>0)
-		// 		consumption_rate[m][n][o] = t[m][n][o]->r->stats.pre_temperature1 - t[m][n][o]->r->stats.temperature; // Jason
-		// 		//else
-		// 		//	temp_budget[m][n][o]=0;
-		// 		/*t[m][n][o]->r->stats.pre_temperature2 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) - adjustment;
-		// 		t[m][n][o]->r->stats.pre_temperature3 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
-		// 		                                         pre_delta_temp* exp(-1.98*0.03) - adjustment;
-		// 		t[m][n][o]->r->stats.pre_temperature4 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
-		// 		                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) - adjustment;
-		// 		t[m][n][o]->r->stats.pre_temperature5 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
-		// 		                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) + 
-		// 												 pre_delta_temp* exp(-1.98*0.05) - adjustment;
-		// 		t[m][n][o]->r->stats.pre_temperature6 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
-		// 		                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) + 
-		// 												 pre_delta_temp* exp(-1.98*0.05) + pre_delta_temp* exp(-1.98*0.06) - adjustment;														 
-		// 	*/
-		// 	}
-		// 	//else t[m][n][o]->r->stats.pre_temperature =  current_temp + current_delta_temp* exp(-2.95*0.01) + current_delta_temp* exp(-2.95*0.02) + current_delta_temp* exp(-2.95*0.03) + current_delta_temp*exp(-2.95*0.04) + current_delta_temp* exp(-2.95*0.05);
-		// 	else{
-		// 		t[m][n][o]->r->stats.pre_temperature1 =  current_temp + current_delta_temp* exp(-1.98*0.01);
-		// 		//if(TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1>0)
-		// 	        //	temp_budget[m][n][o]                  = TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1; // Jason
-		// 		//else
-		// 		//	temp_budget[m][n][o]=0;
-		// 		consumption_rate[m][n][o] = t[m][n][o]->r->stats.pre_temperature1 - t[m][n][o]->r->stats.temperature;	
-		// 		/*
-		// 		t[m][n][o]->r->stats.pre_temperature2 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02);
-		// 		t[m][n][o]->r->stats.pre_temperature3 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
-		// 		                                         current_delta_temp* exp(-1.98*0.03);
-		// 		t[m][n][o]->r->stats.pre_temperature4 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
-		// 		                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04);
-		// 		t[m][n][o]->r->stats.pre_temperature5 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
-		// 		                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04) + 
-		// 												 current_delta_temp* exp(-1.98*0.05);
-		// 		t[m][n][o]->r->stats.pre_temperature6 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
-		// 		                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04) + 
-		// 												 current_delta_temp* exp(-1.98*0.05) + current_delta_temp* exp(-1.98*0.06);														 
-		// 	*/
-		// 	}
+				t[m][n][o]->r->stats.pre_temperature1 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) - adjustment;
+				//if(TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1>0)
+				//consumption_rate[m][n][o] = t[m][n][o]->r->stats.pre_temperature1 - t[m][n][o]->r->stats.temperature; // Jason
+				//else
+				//	temp_budget[m][n][o]=0;
+				t[m][n][o]->r->stats.pre_temperature2 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) - adjustment;
+				t[m][n][o]->r->stats.pre_temperature3 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
+				                                         pre_delta_temp* exp(-1.98*0.03) - adjustment;
+				t[m][n][o]->r->stats.pre_temperature4 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
+				                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) - adjustment;
+				t[m][n][o]->r->stats.pre_temperature5 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
+				                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) + 
+														 pre_delta_temp* exp(-1.98*0.05) - adjustment;
+				t[m][n][o]->r->stats.pre_temperature6 =  pre_current_temp + pre_delta_temp* exp(-1.98*0.01) + pre_delta_temp* exp(-1.98*0.02) +
+				                                         pre_delta_temp* exp(-1.98*0.03) + pre_delta_temp* exp(-1.98*0.04) + 
+														 pre_delta_temp* exp(-1.98*0.05) + pre_delta_temp* exp(-1.98*0.06) - adjustment;														 
 			
-		// 	t[m][n][o]->r->stats.last_pre_temperature1 = t[m][n][o]->r->stats.pre_temperature1;
-		// 	/*t[m][n][o]->r->stats.last_pre_temperature2 = t[m][n][o]->r->stats.pre_temperature2;
-		// 	t[m][n][o]->r->stats.last_pre_temperature3 = t[m][n][o]->r->stats.pre_temperature3;
-		// 	t[m][n][o]->r->stats.last_pre_temperature4 = t[m][n][o]->r->stats.pre_temperature4;
-		// 	t[m][n][o]->r->stats.last_pre_temperature5 = t[m][n][o]->r->stats.pre_temperature5;
-		// 	t[m][n][o]->r->stats.last_pre_temperature6 = t[m][n][o]->r->stats.pre_temperature6;		
-	    //     */
-		// }
-		// else
-		// {
-		// 	t[m][n][o]->r->stats.pre_temperature1 = t[m][n][o]->r->stats.temperature;
-		// 	/*t[m][n][o]->r->stats.pre_temperature2 = t[m][n][o]->r->stats.temperature;
-		// 	t[m][n][o]->r->stats.pre_temperature3 = t[m][n][o]->r->stats.temperature;
-		// 	t[m][n][o]->r->stats.pre_temperature4 = t[m][n][o]->r->stats.temperature;
-		// 	t[m][n][o]->r->stats.pre_temperature5 = t[m][n][o]->r->stats.temperature;
-		// 	t[m][n][o]->r->stats.pre_temperature6 = t[m][n][o]->r->stats.temperature;	
-		// 	*/	
-		// }
+			}
+			//else t[m][n][o]->r->stats.pre_temperature =  current_temp + current_delta_temp* exp(-2.95*0.01) + current_delta_temp* exp(-2.95*0.02) + current_delta_temp* exp(-2.95*0.03) + current_delta_temp*exp(-2.95*0.04) + current_delta_temp* exp(-2.95*0.05);
+			else{
+				t[m][n][o]->r->stats.pre_temperature1 =  current_temp + current_delta_temp* exp(-1.98*0.01);
+				//if(TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1>0)
+			        //	temp_budget[m][n][o]                  = TEMP_THRESHOLD - t[m][n][o]->r->stats.pre_temperature1; // Jason
+				//else
+				//	temp_budget[m][n][o]=0;
+				//consumption_rate[m][n][o] = t[m][n][o]->r->stats.pre_temperature1 - t[m][n][o]->r->stats.temperature;	
+				
+				t[m][n][o]->r->stats.pre_temperature2 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02);
+				t[m][n][o]->r->stats.pre_temperature3 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
+				                                         current_delta_temp* exp(-1.98*0.03);
+				t[m][n][o]->r->stats.pre_temperature4 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
+				                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04);
+				t[m][n][o]->r->stats.pre_temperature5 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
+				                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04) + 
+														 current_delta_temp* exp(-1.98*0.05);
+				t[m][n][o]->r->stats.pre_temperature6 =  current_temp + current_delta_temp* exp(-1.98*0.01) + current_delta_temp* exp(-1.98*0.02) +
+				                                         current_delta_temp* exp(-1.98*0.03) + current_delta_temp* exp(-1.98*0.04) + 
+														 current_delta_temp* exp(-1.98*0.05) + current_delta_temp* exp(-1.98*0.06);														 
+			
+			}
+			
+			t[m][n][o]->r->stats.last_pre_temperature1 = t[m][n][o]->r->stats.pre_temperature1;
+			t[m][n][o]->r->stats.last_pre_temperature2 = t[m][n][o]->r->stats.pre_temperature2;
+			t[m][n][o]->r->stats.last_pre_temperature3 = t[m][n][o]->r->stats.pre_temperature3;
+			t[m][n][o]->r->stats.last_pre_temperature4 = t[m][n][o]->r->stats.pre_temperature4;
+			t[m][n][o]->r->stats.last_pre_temperature5 = t[m][n][o]->r->stats.pre_temperature5;
+			t[m][n][o]->r->stats.last_pre_temperature6 = t[m][n][o]->r->stats.pre_temperature6;		
+	        
+		}
+		else
+		{
+			t[m][n][o]->r->stats.pre_temperature1 = t[m][n][o]->r->stats.temperature;
+			t[m][n][o]->r->stats.pre_temperature2 = t[m][n][o]->r->stats.temperature;
+			t[m][n][o]->r->stats.pre_temperature3 = t[m][n][o]->r->stats.temperature;
+			t[m][n][o]->r->stats.pre_temperature4 = t[m][n][o]->r->stats.temperature;
+			t[m][n][o]->r->stats.pre_temperature5 = t[m][n][o]->r->stats.temperature;
+			t[m][n][o]->r->stats.pre_temperature6 = t[m][n][o]->r->stats.temperature;		
+		}
 	}
 	
 	
@@ -1044,6 +1045,23 @@ void NoximNoC::setTemperature(){
 	// }
 
 
+}
+
+void NoximNoC::PRETempLog(){
+	int o,n,m,idx;
+	pretemp_file<<"Cycletime: "<<getCurrentCycleNum()<<"\n";
+	
+	for(o=0; o < NoximGlobalParams::mesh_dim_z; o++){
+		pretemp_file<<"XY"<<o<<"=[\n";
+		for(n=NoximGlobalParams::mesh_dim_y-1; n > -1; n--){
+			for(m=0; m < NoximGlobalParams::mesh_dim_x; m++){
+				pretemp_file<< t[m][n][o]->r->stats.pre_temperature1 << "\t";
+			}
+			pretemp_file<<"\n";
+		}
+		pretemp_file<<"]\n"<<"\n";
+	}
+	pretemp_file.flush();
 }
 
 bool NoximNoC::EmergencyDecision()
