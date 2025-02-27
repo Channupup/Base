@@ -221,6 +221,7 @@ SC_MODULE(NoximNoC)
 		void Vertical_MAX(bool &isEmergency);
 		void GlobalThrottle(bool &isEmergency);
 		void DistributedThrottle(bool &isEmergency);
+		void FGR(bool &isEmergency);
 		//Temperature trace 
 		vector<double> TemperatureTrace;
         void setTemperature();

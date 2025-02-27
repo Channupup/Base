@@ -19,14 +19,19 @@ int beltway[20][20][4];
 // float penalty_factor[20][20][4];  // Derek 2012.12.17
 // float MTTT[20][20][4];
 int traffic[20][20][4];
+int traffic2[20][20][4];
 //int num_pkt = 2800;
 // double consumption_rate[20][20][4];
 
+int throttling2[20][20][4];
 bool throttling[20][20][4];
+float deltaT[20][20][4];
 extern ofstream transient_log_throughput;
 extern ofstream transient_topology;
 extern ofstream traffic_analysis;
 extern ofstream pretemp_file;
+extern ofstream throt_analysis;
+extern ofstream throt_level;
 void NoximNoC::buildMesh()
 {
 	cout<<"Start buildMesh..."<<endl;
@@ -572,7 +577,7 @@ void NoximNoC::buildMesh()
 		for (int k=0; k<NoximGlobalParams::mesh_dim_z; k++)
 		for (int j=0; j<NoximGlobalParams::mesh_dim_y; j++)
 		for (int i=0; i<NoximGlobalParams::mesh_dim_x; i++){
-		
+			throttling2[i][j][k] = 0;
 			_setNormal(i,j,k);		
 		}
 	}
@@ -602,6 +607,7 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 			t[i][j][k]->r->stats.pre_temperature1 = INIT_TEMP - 273.15;
 			//MTTT[i][j][k] = 10;
 			traffic[i][j][k] = 0;
+			traffic2[i][j][k] = 0;
 		}
 		_emergency = false;
 		_clean     = true;
@@ -632,11 +638,16 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 				transPwr2PtraceFile();
 				HS_interface->Temperature_calc(instPowerTrace, TemperatureTrace);
 				setTemperature();
-				PRETempLog();
 			}
 			//check temperature, whether set emergency mode or not
 			EmergencyDecision();
-			cout<<"*****EndCleanStage*****"<<endl;		
+			//@ct: throttling test
+			//if(CurrentCycle == 1000000)
+			//	_setThrot(3,3,0);
+			//else if(CurrentCycle == 1100000)
+			//	_setNormal(3,3,0);	
+			cout<<"*****EndCleanStage*****"<<endl;
+			PRETempLog();		
 			TransientLog();
 		/*
 		// debug---------------------------------
@@ -676,12 +687,27 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
                 }}
                 //-----------------------------------------
 		*/
-	
 		}
+
+		//trun off the throttling mark based on throt level
+
 		if( CurrentCycle == NoximGlobalParams::simulation_time && NoximGlobalParams::cal_temp){ //Calculate steady state temp.
 			cout<<"Calculate SteadyTemp at "<<getCurrentCycleNum()<<endl;
 			HS_interface->steadyTmp(t);
 		} 
+
+		//@ct new FGR: trun off the throttling mask at certain timepoint based on the throtlting level
+		int level_period = (int) TEMP_REPORT_PERIOD/4;  //4 is the size of your throttling level 
+		if(CurrentCycle % level_period == 0){
+			for(int k=0; k < NoximGlobalParams::mesh_dim_z; k++)
+			for(int j=0; j < NoximGlobalParams::mesh_dim_y; j++)	
+			for(int i=0; i < NoximGlobalParams::mesh_dim_x; i++){		
+				int time_division = CurrentCycleMod/level_period; 
+				if( throttling2[i][j][k]>0 && (time_division == throttling2[i][j][k]) )
+					throttling[i][j][k] = false;
+			}
+		}
+
 	
 		/*
 		int CurrentCycle    = getCurrentCycleNum();
@@ -731,97 +757,88 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 			HS_interface->steadyTmp(t);
 		} 
 	*/
-	if(CurrentCycleMod < ((int) (TEMP_REPORT_PERIOD) - NoximGlobalParams::clean_stage_time))
-	   
-	   /*
-	   if(getCurrentCycleNum() % 10000 == 0){
+		if(CurrentCycleMod < ((int) (TEMP_REPORT_PERIOD) - NoximGlobalParams::clean_stage_time)){
+	    
+			if(getCurrentCycleNum() % 100000 == 0){
+				int increment;
 
-		if(!mkdir("results/Traffic",0777))
-			cout<<"Making new directory results/Traffic"<<endl;
-                
-		string filename;
-        filename = "results/Traffic/Traffic_analysis";
-        filename = MarkFileName( filename );
-		
-
-		fstream dout;
-		dout.open(filename.c_str(),ios::out|ios::app);
-
-		dout<<"Cycletime: "<<getCurrentCycleNum()<<"\n";
-
-		int increment;
-
-		for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
-			dout<<"XY"<<o<<"=[\n";
-			for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
-				for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ ){
-					increment = t[m][n][o]->r->getRoutedFlits() - traffic[m][n][o];
-					dout<<increment<<"\t";
-				}
-			dout<<"\n";
-			}
-			dout<<"]\n"<<"\n";
-		}
-		
-		dout<<"color_range = [0 300000]"<<endl;
-		dout<<"figure(1)"<<endl;
-
-		int temp = 1;
-        for( int k = 0 ; k < NoximGlobalParams::mesh_dim_z ; k++){
-        	dout<<"subplot("<<NoximGlobalParams::mesh_dim_z<<",1,"<<temp<<"), pcolor(XY"<<k<<"), axis off, caxis( color_range ), colormap(jet)"<<endl;
-        	temp += 1;
-        }
-        dout<<"set(gcf, 'PaperPosition', [1 1 7 30]);"<<endl;
-        dout<<"print(gcf,'-djpeg','-r0','"<<MarkFileName( string("") )<<".jpg')"<<endl;
-		//dout.close();
-		
-		for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
-        for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
-        for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ )
-			traffic[m][n][o] = t[m][n][o]->r->getRoutedFlits();
-		}
-		}
-
-	   } */
-
-		if(getCurrentCycleNum() % 100000 == 0){
-			int increment;
-
-			traffic_analysis<<"temper sampling :"<<getCurrentCycleNum()<<"\n";
-			traffic_analysis<<"total traffic\n";
-			for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
-				traffic_analysis<<"XY"<<o<<" = ["<<"\n";
-				for( int n = NoximGlobalParams::mesh_dim_y -1 ; n>-1 ; n-- ){
-					for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ ){
-						increment = t[m][n][o]->r->getRoutedFlits() - traffic[m][n][o];
-						traffic_analysis<<increment<<"\t";
+				traffic_analysis<<" -------------- Major temper sampling :"<<getCurrentCycleNum()<<" -------------- \n";
+				traffic_analysis<<"total traffic\n";
+				for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
+					traffic_analysis<<"XY"<<o<<" = ["<<"\n";
+					for( int n = NoximGlobalParams::mesh_dim_y -1 ; n>-1 ; n-- ){
+						for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ ){
+							increment = t[m][n][o]->r->getRoutedFlits() - traffic2[m][n][o];
+							traffic_analysis<<increment<<"\t";
+						}
+							
+						traffic_analysis<<"\n";
 					}
-						
-					traffic_analysis<<"\n";
+					traffic_analysis<<"]\n"<<"\n";
 				}
-				traffic_analysis<<"]\n"<<"\n";
-			}
 
-			traffic_analysis<<"color_range = [0 300000]"<<endl;
-			traffic_analysis<<"figure(1)"<<endl;
+				traffic_analysis<<"color_range = [0 300000]"<<endl;
+				traffic_analysis<<"figure(1)"<<endl;
 
-			int temp = 1;
-			for( int k = 0 ; k < NoximGlobalParams::mesh_dim_z ; k++){
-					traffic_analysis<<"subplot("<<NoximGlobalParams::mesh_dim_z<<",1,"<<temp<<"), pcolor(XY"<<k<<"), axis off, caxis( color_range ), colormap(jet)"<<endl;
-					temp += 1;
-			}
-			traffic_analysis<<"set(gcf, 'PaperPosition', [1 1 7 30]);"<<endl;
-			traffic_analysis<<"print(gcf,'-djpeg','-r0','"<<MarkFileName( string("") )<<".jpg')"<<endl;
+				int temp = 1;
+				for( int k = 0 ; k < NoximGlobalParams::mesh_dim_z ; k++){
+						traffic_analysis<<"subplot("<<NoximGlobalParams::mesh_dim_z<<",1,"<<temp<<"), pcolor(XY"<<k<<"), axis off, caxis( color_range ), colormap(jet)"<<endl;
+						temp += 1;
+				}
+				traffic_analysis<<"set(gcf, 'PaperPosition', [1 1 7 30]);"<<endl;
+				traffic_analysis<<"print(gcf,'-djpeg','-r0','"<<MarkFileName( string("") )<<".jpg')"<<endl;
 
-			for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
-			for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
-			for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ )
-				traffic[m][n][o] = t[m][n][o]->r->getRoutedFlits();
-			}
-			}
+				for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
+					for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
+						for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ ){
+							traffic2[m][n][o] = t[m][n][o]->r->getRoutedFlits();
+							traffic[m][n][o]  = traffic2[m][n][o];
+						}	
+					}
+				}
 
+			}
+			else if(getCurrentCycleNum() % 10000 == 0){
+				
+				throt_analysis<<"Cycletime: "<<getCurrentCycleNum()<<"\n";
+				for(int o=0; o < NoximGlobalParams::mesh_dim_z; o++){
+					throt_analysis<<"XY"<<o<<"=[\n";
+					for(int n=NoximGlobalParams::mesh_dim_y-1; n > -1; n--){
+						for(int m=0; m < NoximGlobalParams::mesh_dim_x; m++){
+							throt_analysis<< throttling[m][n][o] << "\t";
+						}
+						throt_analysis<<"\n";
+					}
+					throt_analysis<<"]\n"<<"\n";
+				}
+				throt_analysis.flush();
+
+
+				traffic_analysis<<"minor Cycletime: "<<getCurrentCycleNum()<<"\n";
+
+				int increment;
+
+				for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
+					traffic_analysis<<"XY"<<o<<"=[\n";
+					for( int n = NoximGlobalParams::mesh_dim_y -1 ; n>-1 ; n-- ){
+						for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ ){
+							increment = t[m][n][o]->r->getRoutedFlits() - traffic[m][n][o];
+							traffic_analysis<<increment<<"\t";
+						}
+					traffic_analysis<<"\n";
+					}
+					traffic_analysis<<"]\n"<<"\n";
+				}
+				
+				for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
+				for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
+				for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ )
+					traffic[m][n][o] = t[m][n][o]->r->getRoutedFlits();
+				}
+				}
+
+			}
 		}
-	
 	
 	}      
 }
@@ -917,10 +934,14 @@ void NoximNoC::setTemperature(){
 		//thermal prediction
 
 		//if(t[m][n][o]->r->stats.temperature > 85)
+		current_delta_temp = t[m][n][o]->r->stats.temperature - t[m][n][o]->r->stats.last_temperature;
+		if(throttling2[m][n][o] ==0 && current_delta_temp>0)
+			deltaT[m][n][o] = current_delta_temp;  //keep recording the temp increase amptitude for providing Criteria in FGR
+
 		if(getCurrentCycleNum()/TEMP_REPORT_PERIOD > 5)
 		{
 			current_temp = t[m][n][o]->r->stats.temperature;
-			current_delta_temp = t[m][n][o]->r->stats.temperature - t[m][n][o]->r->stats.last_temperature;
+			
 
 			if(current_delta_temp < 0){
 				pre_delta_temp = t[m][n][o]->r->stats.last_pre_temperature1 - t[m][n][o]->r->stats.last_temperature;
@@ -1049,8 +1070,8 @@ void NoximNoC::setTemperature(){
 
 void NoximNoC::PRETempLog(){
 	int o,n,m,idx;
+
 	pretemp_file<<"Cycletime: "<<getCurrentCycleNum()<<"\n";
-	
 	for(o=0; o < NoximGlobalParams::mesh_dim_z; o++){
 		pretemp_file<<"XY"<<o<<"=[\n";
 		for(n=NoximGlobalParams::mesh_dim_y-1; n > -1; n--){
@@ -1062,6 +1083,19 @@ void NoximNoC::PRETempLog(){
 		pretemp_file<<"]\n"<<"\n";
 	}
 	pretemp_file.flush();
+	
+	throt_level<<"Cycletime: "<<getCurrentCycleNum()<<"\n";
+	for(o=0; o < NoximGlobalParams::mesh_dim_z; o++){
+		throt_level<<"XY"<<o<<"=[\n";
+		for(n=NoximGlobalParams::mesh_dim_y-1; n > -1; n--){
+			for(m=0; m < NoximGlobalParams::mesh_dim_x; m++){
+				throt_level<< throttling2[m][n][o] << "\t";
+			}
+			throt_level<<"\n";
+		}
+		throt_level<<"]\n"<<"\n";
+	}
+	throt_level.flush();
 }
 
 bool NoximNoC::EmergencyDecision()
@@ -1071,6 +1105,8 @@ bool NoximNoC::EmergencyDecision()
 		GlobalThrottle(isEmergency);
 	else if(NoximGlobalParams::throt_type == THROT_DISTRIBUTED)
 		DistributedThrottle(isEmergency);
+	else if(NoximGlobalParams::throt_type == THROT_FGR)
+		FGR(isEmergency);
 	else if(NoximGlobalParams::throt_type == THROT_TAVT)
 		TAVT(isEmergency);
 	else if(NoximGlobalParams::throt_type == THROT_TAVT_MAX)
@@ -1086,7 +1122,7 @@ void NoximNoC::GlobalThrottle(bool& isEmergency){
 	for(int z=0; z < NoximGlobalParams::mesh_dim_z; z++) 
 	for(int y=0; y < NoximGlobalParams::mesh_dim_y; y++) 
 	for(int x=0; x < NoximGlobalParams::mesh_dim_x; x++)
-		if(t[x][y][z]->r->stats.temperature > TEMP_THRESHOLD){ // each temperature of routers exceed temperature threshould
+		if(t[x][y][z]->r->stats.temperature > NoximGlobalParams::threshold_para){ // each temperature of routers exceed temperature threshould
 			isEmergency = true;
 			break;
 	}
@@ -1110,34 +1146,65 @@ void NoximNoC::GlobalThrottle(bool& isEmergency){
 	}
 }
 void NoximNoC::DistributedThrottle(bool& isEmergency){
-	for(int z=0; z < NoximGlobalParams::mesh_dim_z - 1 ; z++)
+	for(int z=0; z < NoximGlobalParams::mesh_dim_z     ; z++)
 	for(int y=0; y < NoximGlobalParams::mesh_dim_y     ; y++) 
 	for(int x=0; x < NoximGlobalParams::mesh_dim_x     ; x++){
-		if(t[x][y][z]->r->stats.temperature > TEMP_THRESHOLD){	
+		
+		if(t[x][y][z]->r->stats.temperature > NoximGlobalParams::threshold_para ){
+			//isEmergency = true;
+			throttling2[x][y][z] = 4;
+			throttling[x][y][z] = true;
 			isEmergency = true;
 			t[x][y][z]->pe->IntoEmergency();
 			t[x][y][z]->r ->IntoEmergency();
-			throttling[x][y][z] = true;/*
-			for(int zz=0; zz<z+1; zz++){
-				t[x][y][zz]->pe->IntoEmergency();
-	                        t[x][y][zz]->r ->IntoEmergency();
-        	                throttling[x][y][zz] = true;
- 			}*/
 		}
-		else{	
-			t[x][y][z]->pe->OutOfEmergency();	
+		else{
+			t[x][y][z]->pe->OutOfEmergency();
 			t[x][y][z]->r ->OutOfEmergency();
-			throttling[x][y][z] = false; 
+			throttling2[x][y][z] = 0;
+			throttling[x][y][z] = false;
 		}
 	}
 }
 
+void NoximNoC::FGR(bool& isEmergency){
+	for(int z=0; z < NoximGlobalParams::mesh_dim_z     ; z++)
+	for(int y=0; y < NoximGlobalParams::mesh_dim_y     ; y++) 
+	for(int x=0; x < NoximGlobalParams::mesh_dim_x     ; x++){
+		float criteria = deltaT[x][y][z] / 2;
+
+		if(t[x][y][z]->r->stats.temperature > NoximGlobalParams::threshold_para - criteria ){
+			//isEmergency = true;
+			double diff;
+			diff = t[x][y][z]->r->stats.temperature - NoximGlobalParams::threshold_para + criteria;
+			if(diff<criteria)
+				throttling2[x][y][z] = 1;
+			else if(diff<criteria*2)
+				throttling2[x][y][z] = 2;
+			else if(diff<criteria*3)
+				throttling2[x][y][z] = 3;
+			else
+				throttling2[x][y][z] = 4;
+			
+			throttling[x][y][z] = true;
+			isEmergency = true;
+			t[x][y][z]->pe->IntoEmergency();
+			t[x][y][z]->r ->IntoEmergency();
+		}
+		else{
+			t[x][y][z]->pe->OutOfEmergency();
+			t[x][y][z]->r ->OutOfEmergency();
+			throttling2[x][y][z] = 0;
+			throttling[x][y][z] = false;
+		}
+	}
+}
 void NoximNoC::TAVT(bool& isEmergency){
 	for(int y=0; y < NoximGlobalParams::mesh_dim_y     ; y++ ) 
 	for(int x=0; x < NoximGlobalParams::mesh_dim_x     ; x++ )
 	for(int z=0; z < NoximGlobalParams::mesh_dim_z - 1 ; z++ )
 	{
-		if (t[x][y][z]->r->stats.temperature < TEMP_THRESHOLD ){	
+		if (t[x][y][z]->r->stats.temperature < NoximGlobalParams::threshold_para ){	
 			t[x][y][z]->pe->OutOfEmergency();		
 			t[x][y][z]->r ->OutOfEmergency();
 			throttling[x][y][z] = 0; 
@@ -1165,7 +1232,7 @@ void NoximNoC::TAVT_MAX(bool& isEmergency){
 	for(int x=0; x < NoximGlobalParams::mesh_dim_x     ; x++ )
 	for(int z=0; z < NoximGlobalParams::mesh_dim_z     ; z++ )
 	{
-		if (t[x][y][z]->r->stats.temperature < TEMP_THRESHOLD ){	
+		if (t[x][y][z]->r->stats.temperature < NoximGlobalParams::threshold_para ){	
 			t[x][y][z]->pe->OutOfEmergency();		
 			t[x][y][z]->r ->OutOfEmergency();
 			throttling[x][y][z] = 0; 
@@ -1190,7 +1257,7 @@ void NoximNoC::Vertical(bool& isEmergency){
 	for(int x=0; x < NoximGlobalParams::mesh_dim_x     ; x++ )
 	for(int z=0; z < NoximGlobalParams::mesh_dim_z - 1 ; z++ )
 	{
-		if (t[x][y][z]->r->stats.temperature < TEMP_THRESHOLD ){	
+		if (t[x][y][z]->r->stats.temperature < NoximGlobalParams::threshold_para ){	
 			t[x][y][z]->pe->OutOfEmergency();		
 			t[x][y][z]->r ->OutOfEmergency();
 			throttling[x][y][z] = 0; 
@@ -1218,7 +1285,7 @@ void NoximNoC::Vertical_MAX(bool& isEmergency){
 	for(int y=0; y < NoximGlobalParams::mesh_dim_y     ; y++ ) 
 	for(int x=0; x < NoximGlobalParams::mesh_dim_x     ; x++ )
 	for(int z=0; z < NoximGlobalParams::mesh_dim_z     ; z++ ){
-		if (t[x][y][z]->r->stats.temperature < TEMP_THRESHOLD ){	
+		if (t[x][y][z]->r->stats.temperature < NoximGlobalParams::threshold_para ){	
 			t[x][y][z]->pe->OutOfEmergency();		
 			t[x][y][z]->r ->OutOfEmergency();
 			throttling[x][y][z] = 0; 
@@ -1493,6 +1560,7 @@ void NoximNoC::TransientLog(){
 }
 
 void NoximNoC::_setThrot(int i, int j, int k){
+	throttling2[i][j][k] = 3; //@ct: for new FGP test
 	throttling[i][j][k] = 1;
 	t[i][j][k]->pe->IntoEmergency();
 	t[i][j][k]->r ->IntoEmergency();

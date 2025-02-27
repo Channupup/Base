@@ -23,6 +23,8 @@ ofstream transient_log_throughput;  //Initial in NoximLog, record in NoximNoC.cp
 ofstream transient_topology;
 ofstream traffic_analysis;
 ofstream pretemp_file;
+ofstream throt_analysis;
+ofstream throt_level;
 // Initialize global configuration parameters (can be overridden with command-line arguments)
 int                          NoximGlobalParams::verbose_mode                  = DEFAULT_VERBOSE_MODE;
 int                          NoximGlobalParams::trace_mode                    = DEFAULT_TRACE_MODE;
@@ -70,7 +72,7 @@ bool                         NoximGlobalParams::cal_temp                      = 
 int                          NoximGlobalParams::br_sel                        = INVALID_SELECTION;
 bool                         NoximGlobalParams::message_level                 = DEFAULT_MESSAGE_LEVEL;
 int                          NoximGlobalParams::dynamic_throt_case            = -1;
-
+float						 NoximGlobalParams::threshold_para 				  = 93;
 //---------------------------------------------------------------------------
 
 int sc_main(int arg_num, char *arg_vet[])

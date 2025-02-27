@@ -283,6 +283,10 @@ bool NoximProcessingElement::canShot(NoximPacket & packet)
     bool shot;
     double threshold;
 
+	NoximCoord locad_coord = id2Coord(local_id);
+    if(throttling[locad_coord.x][locad_coord.y][locad_coord.z] == true)
+      return false;
+
     if (NoximGlobalParams::traffic_distribution != TRAFFIC_TABLE_BASED){
 		if (!transmittedAtPreviousCycle)
 			threshold = NoximGlobalParams::packet_injection_rate;
@@ -320,6 +324,8 @@ bool NoximProcessingElement::canShot(NoximPacket & packet)
 			assert(false);
 			}
 		}
+		if( shot && packet.routing < 0) // if shot but no feasible packet, refuse to generate packet
+			return false;
     }
 	else 
 	{			// Table based communication traffic
@@ -335,14 +341,16 @@ bool NoximProcessingElement::canShot(NoximPacket & packet)
 		if (shot){
 			for (unsigned int i = 0; i < dst_prob.size(); i++) {
 				packet.make(local_id, dst_prob[i].first, now, getRandomSize());
-				if ( prob < dst_prob[i].second && TLA(packet) ) {
-					
+				if ( prob < dst_prob[i].second  ) {
 					TAAR(packet);
 					packet.timestamp = getCurrentCycleNum();
 					packet.size = packet.flit_left = getRandomSize();
-				break;
+					break;
+				}
 			}
-			}
+
+			if( !TLA(packet) )
+				shot = 0;
 		}
     }
 	
@@ -359,6 +367,9 @@ NoximPacket NoximProcessingElement::trafficRandom(){
     double range_start = 0.0;
     //cout << "\n " << getCurrentCycleNum() << " PE " << local_id << " rnd = " << rnd << endl;
 	int re_transmit = 1; //1
+
+	int count = 0;
+	int node_num = NoximGlobalParams::mesh_dim_x * NoximGlobalParams::mesh_dim_y * NoximGlobalParams::mesh_dim_z;
     // Random destination distribution
     do {
 		transmit++;
@@ -385,8 +396,17 @@ NoximPacket NoximProcessingElement::trafficRandom(){
 			TAAR(p);
 		}
 
-		if(re_transmit)
+		if(re_transmit){
 			transmit--;
+			count++;
+		}
+		
+		if(count > node_num){
+			cout<<"Node["<<local_id<<"] generate random packet failed!"<<endl;
+			p.routing = INVALID_ROUTING;
+			break;
+		}
+			
 
     } while ((p.dst_id == p.src_id) || re_transmit);
 	
@@ -481,7 +501,7 @@ NoximPacket NoximProcessingElement::trafficBitReversal()
     NoximPacket p;
     p.src_id = local_id;
     p.dst_id = dnode;
-
+	TLA(p);
     p.timestamp = getCurrentCycleNum();
     p.size      = p.flit_left = getRandomSize();
 	p.arr_mid = true;
@@ -580,7 +600,7 @@ void NoximProcessingElement::TraffThrottlingProcess(){
 }
 
 void NoximProcessingElement::IntoEmergency(){
-	_emergency  = true;
+	_emergency  = false;
 	if(_emergency_level < NoximGlobalParams::buffer_depth-1)
 		_emergency_level++;
 }
@@ -684,9 +704,9 @@ bool NoximProcessingElement::TLA( NoximPacket & packet )
 		if     ( adaptive_fail                 == false )routing = ROUTING_WEST_FIRST;
 		else if(      xy_fail                  == false )routing = ROUTING_XYZ;
 		else if( (dw_fail_dest || dw_fail_src) == false )routing = ROUTING_DOWNWARD_CROSS_LAYER;
-		else {  routing = ROUTING_XYZ ;//INVALID_ROUTING;
+		else {  routing = INVALID_ROUTING;
 				//cout<<"fuck routing function all fail"<<endl;
-				return true;
+				return false;
 		}
 	
 		packet.routing   = routing;
@@ -703,7 +723,7 @@ bool NoximProcessingElement::TLA( NoximPacket & packet )
 		not_transmit++;
 		packet.routing = INVALID_ROUTING;
 		//cout<<"fuck! dst throttle"<<endl;
-		return true;
+		return false;
 	}	
 }
 

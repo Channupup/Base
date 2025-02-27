@@ -6,6 +6,8 @@ extern ofstream transient_log_throughput;
 extern ofstream transient_topology;
 extern ofstream traffic_analysis;
 extern ofstream pretemp_file;
+extern ofstream throt_analysis;
+extern ofstream throt_level;
 void NoximLog::BufferLog( NoximNoC *n ){
 	ofstream results_buffer;
 	if(!mkdir("results/buffer",0777)) cout<<"Making new directory results/buffer"<<endl;
@@ -345,14 +347,27 @@ void NoximLog::TrafficLog( ){
 	if(!traffic_analysis.is_open())
 		cout<<"Cannot open "<< filename.c_str() <<endl;
 
-	if(!mkdir("results/PRE", 0777)) cout<<"Making new directory results/TEMP"<<endl;
-	string filename2 = string("reuslts/PRE/pre");
+	if(!mkdir("results/PRE", 0777)) cout<<"Making new directory results/PRE"<<endl;
+	string filename2 = string("results/PRE/pre");
 	filename2 = MarkFileName(filename2);
 	pretemp_file.open(filename2.c_str(), ios::out | ios::app);
 	if(!pretemp_file.is_open()) cout<<"open file "<< filename2.c_str() << "failed!"<<endl;
+
+	if(!mkdir("results/Throt", 0777)) cout<<"Making new directory results/Throt"<<endl;
+	string filename3 = string("results/Throt/throt");
+	filename3 = MarkFileName(filename3);
+	throt_analysis.open(filename3.c_str(), ios::out | ios::app);
+	if(!throt_analysis.is_open()) cout<<"open file "<< filename3.c_str() << "failed!"<<endl;
+
+	string filename4 = string("results/Throt/level");
+	filename4 = MarkFileName(filename4);
+	throt_level.open(filename4.c_str(), ios::out | ios::app);
+	if(!throt_level.is_open()) cout<<"open file "<< filename4.c_str() << "failed!"<<endl;
 }
 
 void NoximLog::TrafficLogEnd( ){
 	traffic_analysis.close();
 	pretemp_file.close();
+	throt_analysis.close();
+	throt_level.close();
 }

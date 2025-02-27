@@ -245,6 +245,9 @@ void parseCmdLine(int arg_num, char *arg_vet[])
 		exit(0);
 	    } else if (!strcmp(arg_vet[i], "-verbose"))
 		NoximGlobalParams::verbose_mode = atoi(arg_vet[++i]);
+		else if(!strcmp(arg_vet[i], "-th")){
+			NoximGlobalParams::threshold_para=atof(arg_vet[++i]);	
+		}
 	    else if (!strcmp(arg_vet[i], "-trace")) {
 		NoximGlobalParams::trace_mode = true;
 		strcpy(NoximGlobalParams::trace_filename, arg_vet[++i]);
@@ -534,6 +537,7 @@ void parseCmdLine(int arg_num, char *arg_vet[])
 			else if(!strcmp(arg_vet[i],"vertical_max"))NoximGlobalParams::throt_type = THROT_VERTICAL_MAX;
 			else if(!strcmp(arg_vet[i],"tavt"))NoximGlobalParams::throt_type = THROT_TAVT;
 			else if(!strcmp(arg_vet[i],"tavt_max"))NoximGlobalParams::throt_type = THROT_VERTICAL_MAX;
+			else if(!strcmp(arg_vet[i],"fgr"))NoximGlobalParams::throt_type = THROT_FGR;
   			else NoximGlobalParams::throt_type = INVALID_THROT;
       	}// end traffic throttling
       

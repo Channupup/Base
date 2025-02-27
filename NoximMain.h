@@ -111,6 +111,7 @@ using namespace std;
 #define THROT_TAVT_MAX               7
 #define THROT_DYNAMIC                8
 #define INVALID_THROT                9
+#define THROT_FGR			         10
 /*** VERTICAL LINK***/
 #define VERTICAL_MESH                0
 #define VERTICAL_CROSSBAR            1
@@ -237,6 +238,7 @@ struct NoximGlobalParams {
 	
 	static bool                         message_level;
 	static int                          dynamic_throt_case;
+	static float						threshold_para;
 };
 
 // NoximCoord -- XY coordinates type of the Tile inside the Mesh

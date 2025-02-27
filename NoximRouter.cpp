@@ -57,7 +57,7 @@ void NoximRouter::rxProcess(){
 
 					routed_flits[i]++;
 					
-					if( received_flit.routing_f != ROUTING_WEST_FIRST )
+					if( received_flit.routing_f == ROUTING_DOWNWARD_CROSS_LAYER )
 						routed_DWflits++;
 						
 					if( received_flit.flit_type == FLIT_TYPE_HEAD )
@@ -1428,6 +1428,7 @@ vector<int> NoximRouter::routingOddEven_Downward (const NoximCoord& current,
   assert(directions.size() > 0 && directions.size() <= 3);
   return directions;
 }
+// 2D oddeven + z direction. first route flit to the same X and Y by oddeven, then move Z
 vector<int> NoximRouter::routingOddEven_Z (const NoximCoord& current, 
 				    const NoximCoord& source, const NoximCoord& destination)
 {
@@ -1570,7 +1571,7 @@ vector<int> NoximRouter::routingDLADR(const NoximCoord& current, const NoximCoor
 	case ROUTING_XYZ                 :return routingXYZ         (                 current, destination                   	);break;
 	case ROUTING_WEST_FIRST          :return routingWestFirst   (                 current, destination                   	);break;
 	//case ROUTING_FULLY_ADAPTIVE      :return routingFullyAdaptive(                 current, destination                   );break;
-	case ROUTING_ODD_EVEN_3D         :return routingOddEven_3D  (				current , source, destination				);break;
+	//case ROUTING_ODD_EVEN_3D         :return routingOddEven_3D  (				current , source, destination				);break;
 	case ROUTING_DOWNWARD_CROSS_LAYER:return DW_layerSelFunction( select_routing, current, destination, source, dw_layer 	);break;
 	default                          :cout<<getCurrentCycleNum()<<":Wrong with Cross-Layer!"<<endl;
 	                                  cout<<"Current    :"<<current<<endl;
@@ -2639,7 +2640,7 @@ void NoximRouter::TraffThrottlingProcess()	//�Y�bemergency mode, �Btraffic
 }
 
 void NoximRouter::IntoEmergency(){
-	_emergency  = true;
+	_emergency  = false;
 	if(_emergency_level < NoximGlobalParams::buffer_depth-1)
 		_emergency_level++;
 }
