@@ -1166,7 +1166,7 @@ void NoximNoC::DistributedThrottle(bool& isEmergency){
 		}
 	}
 }
-
+//New Fine-Grained throttling, still in test
 void NoximNoC::FGR(bool& isEmergency){
 	for(int z=0; z < NoximGlobalParams::mesh_dim_z     ; z++)
 	for(int y=0; y < NoximGlobalParams::mesh_dim_y     ; y++) 
