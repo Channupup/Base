@@ -141,12 +141,14 @@ int sc_main(int arg_num, char *arg_vet[])
 	log.BufferLog(n);
 	log.TrafficLog(n);
 	log.PowerLogEnd();
-	log.ThroughputEnd();
+	
 	log.TrafficLogEnd();
 	
     // Show statistics
     NoximGlobalStats gs(n);
     gs.showStats(std::cout, NoximGlobalParams::detailed);
+
+	log.ThroughputEnd();
     if ((NoximGlobalParams::max_volume_to_be_drained > 0) && getCurrentCycleNum() >= NoximGlobalParams::simulation_time ) {
 	cout << "\nWARNING! the number of flits specified with -volume option" << endl;
 	cout << "has not been reached."                                        << endl;

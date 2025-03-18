@@ -111,8 +111,9 @@ using namespace std;
 #define THROT_TAVT_MAX               7
 #define THROT_DYNAMIC                8
 #define INVALID_THROT                9
-#define THROT_PREDICTION			 10
-#define THROT_FGR			         11
+#define THROT_PREDICTION			 13
+#define THROT_FGR			         10
+#define THROT_OLDFGR			     11
 /*** VERTICAL LINK***/
 #define VERTICAL_MESH                0
 #define VERTICAL_CROSSBAR            1
@@ -540,8 +541,10 @@ inline string MarkFileName( string name ){
 	name  = name + "_sel-" + temperal;
 	sprintf( temperal, "%.4f", NoximGlobalParams::packet_injection_rate);
 	name = name  + "_pir-" + temperal;
-	// sprintf( temperal, "%.1f",  NoximGlobalParams::threshold_para);
-	// name = name  + "_th-" + temperal;
+	sprintf( temperal, "%.1f",  NoximGlobalParams::threshold_para);
+	name = name  + "_th-" + temperal;
+	sprintf( temperal, "%d",  NoximGlobalParams::throt_type);
+	name = name  + "_throt-" + temperal;
 	// sprintf( temperal, "%d",  NoximGlobalParams::pre);
 	// name = name  + "_pre-" + temperal;
 	// sprintf( temperal, "%d",  NoximGlobalParams::steplen);
@@ -551,12 +554,9 @@ inline string MarkFileName( string name ){
 		name = name + "_traffic-" + temperal +"_"+ NoximGlobalParams::traffic_table_filename;
 	}
 	else
-		name = name + "_traffic-" + temperal +"_not_table" ;
+		name = name + "_traffic-" + temperal +"_Ntable" ;
 	time(&tt);
 	pp = gmtime(&tt);
-	
-
-
 	sprintf( temperal, "%d", pp->tm_hour);
 	name = name + "_time-" + temperal;
 	sprintf( temperal, "%d", pp->tm_min);

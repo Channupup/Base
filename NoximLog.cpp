@@ -362,7 +362,8 @@ void NoximLog::TrafficLog( ){
 	throt_analysis.open(filename3.c_str(), ios::out | ios::app);
 	if(!throt_analysis.is_open()) cout<<"open file "<< filename3.c_str() << "failed!"<<endl;
 
-	string filename4 = string("results/Throt/level");
+	if(!mkdir("results/ThrotLevel", 0777)) cout<<"Making new directory results/Throt"<<endl;
+	string filename4 = string("results/ThrotLevel/level");
 	filename4 = MarkFileName(filename4);
 	throt_level.open(filename4.c_str(), ios::out | ios::app);
 	if(!throt_level.is_open()) cout<<"open file "<< filename4.c_str() << "failed!"<<endl;
