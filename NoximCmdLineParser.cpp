@@ -28,6 +28,9 @@ void showHelp(char selfname[])
     cout <<
 	"\t-dimy N\t\tSet the mesh Y dimension to the specified integer value (default "
 	<< DEFAULT_MESH_DIM_Y << ")" << endl;
+	cout <<
+	"\t-dimz N\t\tSet the mesh Z dimension to the specified integer value (default "
+	<< DEFAULT_MESH_DIM_Z << ")" << endl;
     cout <<
 	"\t-buffer N\tSet the buffer depth of each channel of the router to the specified integer value [flits] (default "
 	<< DEFAULT_BUFFER_DEPTH << ")" << endl;
@@ -142,6 +145,7 @@ void showConfig()
 	
 	cout << "- throttling_type = "    << NoximGlobalParams::throt_type         << endl;
 	cout << "- dw_layer_sel = "       << NoximGlobalParams::dw_layer_sel       << endl;
+	cout << "- classification = " << NoximGlobalParams::classification << endl;
 }
 
 void checkInputParameters()
@@ -247,6 +251,30 @@ void parseCmdLine(int arg_num, char *arg_vet[])
 		NoximGlobalParams::verbose_mode = atoi(arg_vet[++i]);
 		else if(!strcmp(arg_vet[i], "-th")){
 			NoximGlobalParams::threshold_para=atof(arg_vet[++i]);	
+		}
+		else if(!strcmp(arg_vet[i], "-steplen")){
+			NoximGlobalParams::steplen=atof(arg_vet[++i]);	
+		}
+		else if (!strcmp(arg_vet[i], "-fluct")){
+			NoximGlobalParams::fluct = true;
+		}
+		else if (!strcmp(arg_vet[i], "-pre")){
+			char *pre_method = arg_vet[++i];
+			if(!strcmp(pre_method, "lstm")){
+				NoximGlobalParams::pre = 1;
+			}
+			else if(!strcmp(pre_method, "arma")){
+				NoximGlobalParams::pre = 2;
+			}
+			else if(!strcmp(pre_method, "ann")){
+				NoximGlobalParams::pre = 3;
+			}
+		}
+		else if (!strcmp(arg_vet[i], "-class")){
+			NoximGlobalParams::classification = atoi(arg_vet[++i]);
+		}
+		else if(!strcmp(arg_vet[i], "-debug")){
+			NoximGlobalParams::debug=atof(arg_vet[++i]);	
 		}
 	    else if (!strcmp(arg_vet[i], "-trace")) {
 		NoximGlobalParams::trace_mode = true;
@@ -531,6 +559,7 @@ void parseCmdLine(int arg_num, char *arg_vet[])
 				NoximGlobalParams::throt_type = THROT_TEST;
 				NoximGlobalParams::dynamic_throt_case = atoi(arg_vet[++i]);
 			}
+			else if(!strcmp(arg_vet[i],"prediction"))      NoximGlobalParams::throt_type = THROT_PREDICTION;
   			else if(!strcmp(arg_vet[i],"global"))      NoximGlobalParams::throt_type = THROT_GLOBAL;
  			else if(!strcmp(arg_vet[i],"distributed")) NoximGlobalParams::throt_type = THROT_DISTRIBUTED;
  			else if(!strcmp(arg_vet[i],"vertical"))    NoximGlobalParams::throt_type = THROT_VERTICAL;

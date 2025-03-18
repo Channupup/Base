@@ -90,18 +90,29 @@ class NoximStats {
     NoximPower power;
 	double	   temperature;
 	double	   last_temperature;	//record the last temperature for comparison to decision throttled quota
-double      last_pre_temperature1; //the last prediciton result (Jimmy modified on 2012.04.12)
+	double last_temperature1;
+  	double last_temperature2;
+  	double last_temperature3;
+  	double last_temperature4;
+  	double last_temperature5;
+  	double last_temperature6;
+  	double last_temperature7;
+  	double last_temperature8;
+  	double last_temperature9;
+	double      last_pre_temperature1; //the last prediciton result (Jimmy modified on 2012.04.12)
 	double      last_pre_temperature2; 
 	double      last_pre_temperature3; 
 	double      last_pre_temperature4; 
 	double      last_pre_temperature5; 
-	double      last_pre_temperature6; 	
+	double      last_pre_temperature6;
+	double      last_pre_temperature7;	
 	double      pre_temperature1; 
 	double      pre_temperature2;
 	double      pre_temperature3;
 	double      pre_temperature4; 
 	double      pre_temperature5;
-	double      pre_temperature6; 		
+	double      pre_temperature6; 
+  int        throt_d;			
 	unsigned int received[ DIRECTIONS + 1]; // for counting 7 port arrival rate
 	
   private:

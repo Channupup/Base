@@ -5,13 +5,13 @@
 #define CYCLE_PERIOD 	1   //0.25e-9				//4GHz
 ////////////////HotSpot setting//////////////////////////////////////////////////////
 //unit: ns
-#define TEMP_REPORT_PERIOD 1e5 //1e6 //1e-4			//¼Ð·Ç¬O¥Î1e-4, 1e-6¬O¬°¤F¥[³t¼ÒÀÀ®É¥Îªº³]©w  //1e6 should be the same with Sim_cycle_num_per_10ms_interval in NoximPower.cpp
+#define TEMP_REPORT_PERIOD 5e4 //1e6 //1e-4			//ï¿½Ð·Ç¬Oï¿½ï¿½1e-4, 1e-6ï¿½Oï¿½ï¿½ï¿½Fï¿½[ï¿½tï¿½ï¿½ï¿½ï¿½ï¿½É¥Îªï¿½ï¿½]ï¿½w  //1e6 should be the same with Sim_cycle_num_per_10ms_interval in NoximPower.cpp
 //Initial temperature
 #define INIT_TEMP	 358.15//298.15 //350.15//77 kalvin degree
-#define INIT_TEMP_80 348 //353						//¥Î¨Ó³]©w³Ì¤W¼h(³Ì¼ö)ªº·Å«×, ³]°ª¤@ÂI·|¤ñ¸û§Ö¨ì¹FÃ­ºA, ¸`¬Ù¼ÒÀÀ®É¶¡
-#define TEMP_THRESHOLD 98//70 
+#define INIT_TEMP_80 348 //353						//ï¿½Î¨Ó³]ï¿½wï¿½Ì¤Wï¿½h(ï¿½Ì¼ï¿½)ï¿½ï¿½ï¿½Å«ï¿½, ï¿½]ï¿½ï¿½ï¿½@ï¿½Iï¿½|ï¿½ï¿½ï¿½ï¿½Ö¨ï¿½FÃ­ï¿½A, ï¿½`ï¿½Ù¼ï¿½ï¿½ï¿½ï¿½É¶ï¿½
+#define TEMP_THRESHOLD 92//70 
 #define BELTWAY_THRESHOLD 99.9
-//Area(Side) of Router & Tile (¨ä¹ê¬OÃäªø) (unit: meter)
+//Area(Side) of Router & Tile (ï¿½ï¿½ï¿½Oï¿½ï¿½ï¿½) (unit: meter)
 #define ROUTER_LENGTH   0.00065
 #define ROUTER_WIDTH	0.00053
 #define FPMAC_LENGTH	0.002

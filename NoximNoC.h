@@ -204,7 +204,8 @@ SC_MODULE(NoximNoC)
 	bool EmergencyDecision();
 
   private:
-
+		int  randInt(int min, int max);
+		void printmse();	
 	    void buildMesh();
 		void entry();
 	    Thermal_IF* HS_interface;
@@ -220,6 +221,7 @@ SC_MODULE(NoximNoC)
 		void Vertical(bool &isEmergency);
 		void Vertical_MAX(bool &isEmergency);
 		void GlobalThrottle(bool &isEmergency);
+		void PredictionThrottle(bool &isEmergency);
 		void DistributedThrottle(bool &isEmergency);
 		void FGR(bool &isEmergency);
 		//Temperature trace 
@@ -239,6 +241,14 @@ SC_MODULE(NoximNoC)
 		//bool _CleanDone();
 		bool _emergency;
 		bool _clean;
+
+		void LSTMpre();
+		bool Optimizer(vector<int> &throt_k, vector<double> &T_pre,double x1,double x2,double x3,double x4, double x5, double x6, double x7,double x8, double x9, double x10);
+		double cost_function(int m, int n, int o, vector<int> &throt_k, vector<double> &T_pre);
+		double LSTMpredictor(int level,double x1,double x2,double x3,double x4, double x5, double x6, double x7,double x8, double x9, double x10);
+		void predictor(vector<int>& throt_k,vector<double> &T_pre,double x1,double x2,double x3,double x4, double x5, double x6, double x7,double x8, double x9, double x10);
+		double tmp_predict(int x, int y, int z, double x1,double x2,double x3,double x4, double x5, double x6, double x7,double x8, double x9, double x10);
+		
 };
 
 #endif

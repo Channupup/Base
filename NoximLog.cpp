@@ -5,6 +5,7 @@ extern ofstream results_log_pwr;
 extern ofstream transient_log_throughput;
 extern ofstream transient_topology;
 extern ofstream traffic_analysis;
+extern ofstream traffic_period;
 extern ofstream pretemp_file;
 extern ofstream throt_analysis;
 extern ofstream throt_level;
@@ -338,15 +339,17 @@ void NoximLog::ThroughputEnd(             ){
 }
 
 void NoximLog::TrafficLog( ){
-	if(!mkdir("results/Traffic",0777))
-        cout<<"Making new directory results/Traffic"<<endl;
-	string filename;
-	filename = "results/Traffic/Traffic_analysis";
+	if(!mkdir("results/Traffic",0777)) cout<<"Making new directory results/Traffic"<<endl;
+	string filename = "results/Traffic/Traffic_analysis";
 	filename = MarkFileName( filename );
 	traffic_analysis.open(filename.c_str(),ios::out|ios::app);
-	if(!traffic_analysis.is_open())
-		cout<<"Cannot open "<< filename.c_str() <<endl;
+	if(!traffic_analysis.is_open()) cout<<"Cannot open "<< filename.c_str() <<endl;
 
+	string filename1 = "results/Traffic/Traffic_period";
+	filename1 = MarkFileName( filename1 );
+	traffic_analysis.open(filename.c_str(),ios::out|ios::app);
+	if(!traffic_period.is_open()) cout<<"Cannot open "<< filename.c_str() <<endl;
+	
 	if(!mkdir("results/PRE", 0777)) cout<<"Making new directory results/PRE"<<endl;
 	string filename2 = string("results/PRE/pre");
 	filename2 = MarkFileName(filename2);
@@ -367,6 +370,7 @@ void NoximLog::TrafficLog( ){
 
 void NoximLog::TrafficLogEnd( ){
 	traffic_analysis.close();
+	traffic_period.close();
 	pretemp_file.close();
 	throt_analysis.close();
 	throt_level.close();

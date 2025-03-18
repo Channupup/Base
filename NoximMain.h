@@ -111,7 +111,8 @@ using namespace std;
 #define THROT_TAVT_MAX               7
 #define THROT_DYNAMIC                8
 #define INVALID_THROT                9
-#define THROT_FGR			         10
+#define THROT_PREDICTION			 10
+#define THROT_FGR			         11
 /*** VERTICAL LINK***/
 #define VERTICAL_MESH                0
 #define VERTICAL_CROSSBAR            1
@@ -157,6 +158,7 @@ using namespace std;
 #define DEFAULT_DETAILED                         false
 #define DEFAULT_DYAD_THRESHOLD                   0.6
 #define DEFAULT_MAX_VOLUME_TO_BE_DRAINED         0
+#define DEFAULT_CLASSIFICATION                   5
 /****************MODIFY BY HUI-SHUN********************/
 #define DEFAULT_DW_LAYER_SEL                     DW_BL  								
 #define DEFAULT_DOWN_LEVEL				             3
@@ -239,6 +241,11 @@ struct NoximGlobalParams {
 	static bool                         message_level;
 	static int                          dynamic_throt_case;
 	static float						threshold_para;
+	static bool                         fluct;
+	static int							pre;
+    static float						debug;
+	static int 							steplen;
+	static int                          classification;
 };
 
 // NoximCoord -- XY coordinates type of the Tile inside the Mesh
@@ -524,7 +531,11 @@ inline string MarkFileName( string name ){
 		name =name  + "_DLDR";
 	else
 		name =name  + "_rt-" + temperal;
-	
+		
+	sprintf( temperal, "%d", NoximGlobalParams::throt_type);
+	name  = name + "_throt-" + temperal;
+	sprintf( temperal, "%d", NoximGlobalParams::classification);
+	name  = name + "_class-" + temperal;
 	sprintf( temperal, "%d", NoximGlobalParams::selection_strategy);
 	name  = name + "_sel-" + temperal;
 	sprintf( temperal, "%.4f", NoximGlobalParams::packet_injection_rate);

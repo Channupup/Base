@@ -17,13 +17,13 @@ NoximPower::NoximPower()
 	Total_Simulation_Time_in_Sec     = 10   ; // total simulated virtual time: 10 second
 	Accumulation_Interval_in_Sec     = 0.01  ; // 0.01 second, interval of transient temp. est. in HotSpot
 	Real_cycle_num_per_10ms_interval = (int)1e7  ; // 1GHz router, 0.01 second interval = 10^7 cycle 
-	Sim_cycle_num_per_10ms_interval  = (int)1e5  ; // Sim. 10^4 cycle for each real 10^7 cycle interval
+  Sim_cycle_num_per_10ms_interval  = ((int) TEMP_REPORT_PERIOD/ NoximGlobalParams::classification)  ; // Sim. 10^4 cycle for each real 10^7 cycle interval
 	
 	// Set this veariable for shorten the simulation cycle number
 	Energy_Extrapolation_Factor = (double)Real_cycle_num_per_10ms_interval/Sim_cycle_num_per_10ms_interval;
 	
 	// Set this variable for scaling estimated power
-	// fitting target: steady state avergate temperature = 80-core paper's avg temp. (­n¦A­«·sÅçÃÒ!!)
+	// fitting target: steady state avergate temperature = 80-core paper's avg temp. (ï¿½nï¿½Aï¿½ï¿½ï¿½sï¿½ï¿½ï¿½ï¿½!!)
 	Power_Scaling_Factor = 0.33 ;//0.2625; //0.25
 	
 	// Transient_Power = accEnergy_Transient * accEnergy_to_Transient_Power_coeff;

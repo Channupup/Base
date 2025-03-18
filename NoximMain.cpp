@@ -22,6 +22,7 @@ ofstream results_log_pwr;           //Initial in NoximLog, record in thermal_IF.
 ofstream transient_log_throughput;  //Initial in NoximLog, record in NoximNoC.cpp
 ofstream transient_topology;
 ofstream traffic_analysis;
+ofstream traffic_period;
 ofstream pretemp_file;
 ofstream throt_analysis;
 ofstream throt_level;
@@ -72,7 +73,12 @@ bool                         NoximGlobalParams::cal_temp                      = 
 int                          NoximGlobalParams::br_sel                        = INVALID_SELECTION;
 bool                         NoximGlobalParams::message_level                 = DEFAULT_MESSAGE_LEVEL;
 int                          NoximGlobalParams::dynamic_throt_case            = -1;
+bool                         NoximGlobalParams::fluct                         = false;
+int						     NoximGlobalParams::pre							  = 0;	
 float						 NoximGlobalParams::threshold_para 				  = 93;
+float 						 NoximGlobalParams::debug						  = 0;
+int 						 NoximGlobalParams::steplen					 	  = 1;
+int                          NoximGlobalParams::classification                = DEFAULT_CLASSIFICATION;
 //---------------------------------------------------------------------------
 
 int sc_main(int arg_num, char *arg_vet[])

@@ -12,7 +12,7 @@
 #include <sys/stat.h>
 using namespace std;
 int wait_cnt[200];
-
+extern ofstream transient_log_throughput;
 NoximGlobalStats::NoximGlobalStats(const NoximNoC * _noc)
 {
     noc = _noc;
@@ -447,7 +447,8 @@ void NoximGlobalStats::showStats(std::ostream & out, bool detailed)
 	out << "% Global Total Msg avg delay (cycles): "     << getMsgTotalAverageDelay() << endl;*/
     out << "% Global average throughput (flits/cycle): " <<	getAverageThroughput  () << endl;
     out << "% Throughput (flits/cycle/IP): "             << getThroughput         () << endl;
-    out << "% Max delay (cycles): "                      << getMaxDelay           () << endl;
+    transient_log_throughput << "% Throughput (flits/cycle/IP): "<< getThroughput() <<" ,threshold: "<< NoximGlobalParams::threshold_para<< endl;
+	out << "% Max delay (cycles): "                      << getMaxDelay           () << endl;
     out << "% Total energy (J): "                        << getPower              () << endl;
 	out	<< "% Avg power (J/cycle): "                     <<	getPower()/NoximGlobalParams::simulation_time<< endl;
 	out	<< "% Avg power per router (J/cycle): "          <<	getPower()/NoximGlobalParams::simulation_time/(NoximGlobalParams::mesh_dim_x*NoximGlobalParams::mesh_dim_y*NoximGlobalParams::mesh_dim_z) << endl;
@@ -470,6 +471,7 @@ void NoximGlobalStats::showStats(std::ostream & out, bool detailed)
 		for ( z = 0 ; z< flits_mtx.size() ; z++ ) out << setw(6) <<flits_mtx[z]<<"  ";
 		out<<endl;
 	}
+	/*
     getDelayHist();
 	if (detailed) {
 	out << endl << "detailed = [" << endl;
@@ -501,4 +503,5 @@ void NoximGlobalStats::showStats(std::ostream & out, bool detailed)
 			out << setw(10) << rf_mtx[z][y][x]<<endl;
 	}
 	out << "];" << endl;    }	
+	*/
 }
