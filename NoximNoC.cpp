@@ -14,7 +14,6 @@
 #include "mat.cpp"
 using namespace std;
 //the Variable for interlace
-bool interlace_type;
 int rema;
 int best_grid[1][10][10];
 std::vector<std::vector<std::vector<int>>> arr(DEFAULT_MESH_DIM_Z, std::vector<std::vector<int>>(DEFAULT_MESH_DIM_X, std::vector<int>(DEFAULT_MESH_DIM_Y)));
@@ -1106,7 +1105,6 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 		}
 		//the variable for interlace
 		MaxTempall=0;
-		interlace_type=false;
 		rema=0;
 		arr = read_3d_array_from_file("output.txt");
 		// 打印读取到的三维数组
@@ -1170,7 +1168,7 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 					cout<<"Predictive DTM"<<endl;}
 				else
 					setTemperature();
-				setTemperature();
+				//setTemperature();
 			}
 			//check temperature, whether set emergency mode or not
 			EmergencyDecision();
@@ -1182,10 +1180,7 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 			cout<<"*****EndCleanStage*****"<<endl;
 			PRETempLog();		
 			TransientLog();
-			//the function for interlace
-			//interlace_type 没5_0000个周期反转一次，下一次进行温度控制的就是下一类结点了
-			interlace_type=!interlace_type;
-			//remainder 每50000个周期增加一个，等于设定值时清零
+
 			if(rema<NoximGlobalParams::classification-1){
 				rema++;
 			}
@@ -1251,7 +1246,6 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 			}
 		}
 
-	
 		/*
 		int CurrentCycle    = getCurrentCycleNum();
 		int CurrentCycleMod = (getCurrentCycleNum() % (int) (TEMP_REPORT_PERIOD));
@@ -1305,31 +1299,31 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 			if(getCurrentCycleNum() % 100000 == 0){
 				int increment;
 
-				traffic_analysis<<" -------------- Major temper sampling :"<<getCurrentCycleNum()<<" -------------- \n";
-				traffic_analysis<<"total traffic\n";
+				traffic_period<<" -------------- Major temper sampling :"<<getCurrentCycleNum()<<" -------------- \n";
+				traffic_period<<"total traffic\n";
 				for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
-					traffic_analysis<<"XY"<<o<<" = ["<<"\n";
+					traffic_period<<"XY"<<o<<" = ["<<"\n";
 					for( int n = NoximGlobalParams::mesh_dim_y -1 ; n>-1 ; n-- ){
 						for( int m = 0 ; m < NoximGlobalParams::mesh_dim_x ; m++ ){
 							increment = t[m][n][o]->r->getRoutedFlits() - traffic2[m][n][o];
-							traffic_analysis<<increment<<"\t";
+							traffic_period<<increment<<"\t";
 						}
 							
-						traffic_analysis<<"\n";
+						traffic_period<<"\n";
 					}
-					traffic_analysis<<"]\n"<<"\n";
+					traffic_period<<"]\n"<<"\n";
 				}
 
-				traffic_analysis<<"color_range = [0 300000]"<<endl;
-				traffic_analysis<<"figure(1)"<<endl;
+				traffic_period<<"color_range = [0 300000]"<<endl;
+				traffic_period<<"figure(1)"<<endl;
 
 				int temp = 1;
 				for( int k = 0 ; k < NoximGlobalParams::mesh_dim_z ; k++){
-						traffic_analysis<<"subplot("<<NoximGlobalParams::mesh_dim_z<<",1,"<<temp<<"), pcolor(XY"<<k<<"), axis off, caxis( color_range ), colormap(jet)"<<endl;
+					traffic_period<<"subplot("<<NoximGlobalParams::mesh_dim_z<<",1,"<<temp<<"), pcolor(XY"<<k<<"), axis off, caxis( color_range ), colormap(jet)"<<endl;
 						temp += 1;
 				}
-				traffic_analysis<<"set(gcf, 'PaperPosition', [1 1 7 30]);"<<endl;
-				traffic_analysis<<"print(gcf,'-djpeg','-r0','"<<MarkFileName( string("") )<<".jpg')"<<endl;
+				traffic_period<<"set(gcf, 'PaperPosition', [1 1 7 30]);"<<endl;
+				traffic_period<<"print(gcf,'-djpeg','-r0','"<<MarkFileName( string("") )<<".jpg')"<<endl;
 
 				for( int o = 0 ; o < NoximGlobalParams::mesh_dim_z ; o++ ){
 					for( int n = 0 ; n < NoximGlobalParams::mesh_dim_y ; n++ ){
@@ -1728,30 +1722,40 @@ void NoximNoC::Old_FGR(bool& isEmergency){
 	for(int z=0; z < NoximGlobalParams::mesh_dim_z     ; z++)
 	for(int y=0; y < NoximGlobalParams::mesh_dim_y     ; y++)
 	for(int x=0; x < NoximGlobalParams::mesh_dim_x     ; x++){
-		if(t[x][y][z]->r->stats.temperature > NoximGlobalParams::threshold_para ){
-			//isEmergency = true;
-			double diff;
-			diff = t[x][y][z]->r->stats.temperature - NoximGlobalParams::threshold_para;
-			if(diff<0.2)
-				throttling2[x][y][z] = 1;
-			else if(diff<0.4)
-				throttling2[x][y][z] = 2;
-			else if(diff<0.7)
-				throttling2[x][y][z] = 3;
-			else 
-				throttling2[x][y][z] = 4;
 
-			throttling[x][y][z] = true;
-			isEmergency = true;
-			t[x][y][z]->pe->IntoEmergency();
-			t[x][y][z]->r ->IntoEmergency();
-		}
-		else{
-			t[x][y][z]->pe->OutOfEmergency();
-			t[x][y][z]->r ->OutOfEmergency();
-			throttling2[x][y][z] = 0;
-		}
+		NoximCoord coord;
+        coord.x = x;
+        coord.y = y;
+		coord.z = z;
+		int node_id = best_grid[z][y][x];
+        //int node_id = coord2Id(coord);
+		if(node_id%NoximGlobalParams::classification==rema){
 
+			if(t[x][y][z]->r->stats.temperature > NoximGlobalParams::threshold_para ){
+				//isEmergency = true;
+				double diff;
+				diff = t[x][y][z]->r->stats.temperature - NoximGlobalParams::threshold_para;
+				if(diff<0.2)
+					throttling2[x][y][z] = 1;
+				else if(diff<0.4)
+					throttling2[x][y][z] = 2;
+				else if(diff<0.7)
+					throttling2[x][y][z] = 3;
+				else 
+					throttling2[x][y][z] = 4;
+
+				throttling[x][y][z] = true;
+				isEmergency = true;
+				t[x][y][z]->pe->IntoEmergency();
+				t[x][y][z]->r ->IntoEmergency();
+			}
+			else{
+				t[x][y][z]->pe->OutOfEmergency();
+				t[x][y][z]->r ->OutOfEmergency();
+				throttling2[x][y][z] = 0;
+			}
+		
+		}
 	}
 
 }

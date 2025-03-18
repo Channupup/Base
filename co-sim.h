@@ -5,7 +5,7 @@
 #define CYCLE_PERIOD 	1   //0.25e-9				//4GHz
 ////////////////HotSpot setting//////////////////////////////////////////////////////
 //unit: ns
-#define TEMP_REPORT_PERIOD 5e4 //1e6 //1e-4			//�зǬO��1e-4, 1e-6�O���F�[�t�����ɥΪ��]�w  //1e6 should be the same with Sim_cycle_num_per_10ms_interval in NoximPower.cpp
+#define TEMP_REPORT_PERIOD 1e5 //1e6 //1e-4			//�зǬO��1e-4, 1e-6�O���F�[�t�����ɥΪ��]�w  //1e6 should be the same with Sim_cycle_num_per_10ms_interval in NoximPower.cpp
 //Initial temperature
 #define INIT_TEMP	 358.15//298.15 //350.15//77 kalvin degree
 #define INIT_TEMP_80 348 //353						//�Ψӳ]�w�̤W�h(�̼�)���ū�, �]���@�I�|����֨�Fí�A, �`�ټ����ɶ�
