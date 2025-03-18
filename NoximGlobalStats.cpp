@@ -12,7 +12,8 @@
 #include <sys/stat.h>
 using namespace std;
 int wait_cnt[200];
-
+extern float global_maxtemp;
+extern ofstream transient_log_throughput;
 NoximGlobalStats::NoximGlobalStats(const NoximNoC * _noc)
 {
     noc = _noc;
@@ -449,6 +450,9 @@ void NoximGlobalStats::showStats(std::ostream & out, bool detailed)
     out << "% Throughput (flits/cycle/IP): "             << getThroughput         () << endl;
     out << "% Max delay (cycles): "                      << getMaxDelay           () << endl;
     out << "% Total energy (J): "                        << getPower              () << endl;
+	out << "% Max Temperature (C): "                     << global_maxtemp    		 << endl;
+	transient_log_throughput << "% Max Temperature (C): "      << global_maxtemp    		 << endl;
+	transient_log_throughput << "% Throughput (flits/cycle/IP): "  << getThroughput         () << endl;
 	out	<< "% Avg power (J/cycle): "                     <<	getPower()/NoximGlobalParams::simulation_time<< endl;
 	out	<< "% Avg power per router (J/cycle): "          <<	getPower()/NoximGlobalParams::simulation_time/(NoximGlobalParams::mesh_dim_x*NoximGlobalParams::mesh_dim_y*NoximGlobalParams::mesh_dim_z) << endl;
 	out << "% Avg waiting time in each buffer (cycles): "<< getAverageWaitingTime()<< endl; 

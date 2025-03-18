@@ -538,6 +538,7 @@ void parseCmdLine(int arg_num, char *arg_vet[])
 			else if(!strcmp(arg_vet[i],"tavt"))NoximGlobalParams::throt_type = THROT_TAVT;
 			else if(!strcmp(arg_vet[i],"tavt_max"))NoximGlobalParams::throt_type = THROT_VERTICAL_MAX;
 			else if(!strcmp(arg_vet[i],"fgr"))NoximGlobalParams::throt_type = THROT_FGR;
+			else if(!strcmp(arg_vet[i],"old_fgr"))NoximGlobalParams::throt_type = THROT_OLDFGR;
   			else NoximGlobalParams::throt_type = INVALID_THROT;
       	}// end traffic throttling
       

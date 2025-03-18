@@ -402,7 +402,7 @@ NoximPacket NoximProcessingElement::trafficRandom(){
 		}
 		
 		if(count > node_num){
-			cout<<"Node["<<local_id<<"] generate random packet failed!"<<endl;
+			//cout<<"Node["<<local_id<<"] generate random packet failed!"<<endl;
 			p.routing = INVALID_ROUTING;
 			break;
 		}

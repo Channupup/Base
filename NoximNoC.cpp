@@ -22,7 +22,7 @@ int traffic[20][20][4];
 int traffic2[20][20][4];
 //int num_pkt = 2800;
 // double consumption_rate[20][20][4];
-
+float global_maxtemp;
 int throttling2[20][20][4];
 bool throttling[20][20][4];
 float deltaT[20][20][4];
@@ -609,6 +609,7 @@ void NoximNoC::entry(){  //Foster big modified - 09/11/12
 			traffic[i][j][k] = 0;
 			traffic2[i][j][k] = 0;
 		}
+		global_maxtemp = 0;
 		_emergency = false;
 		_clean     = true;
 	/*	if(!mkdir("results/Traffic",0777)) cout<<"Making new directory results/Hist"<<endl;
@@ -938,10 +939,13 @@ void NoximNoC::setTemperature(){
 		if(throttling2[m][n][o] ==0 && current_delta_temp>0)
 			deltaT[m][n][o] = current_delta_temp;  //keep recording the temp increase amptitude for providing Criteria in FGR
 
-		if(getCurrentCycleNum()/TEMP_REPORT_PERIOD > 5)
+		if(getCurrentCycleNum()/TEMP_REPORT_PERIOD > 3)
 		{
 			current_temp = t[m][n][o]->r->stats.temperature;
 			
+			// if(getCurrentCycleNum()/TEMP_REPORT_PERIOD == 6){
+			// 	cout<< "idx: "<< idx <<", current_delta_temp: "<< current_delta_temp << ", last_temp: "<<t[m][n][o]->r->stats.last_temperature<<endl;
+			// }
 
 			if(current_delta_temp < 0){
 				pre_delta_temp = t[m][n][o]->r->stats.last_pre_temperature1 - t[m][n][o]->r->stats.last_temperature;
@@ -1105,6 +1109,8 @@ bool NoximNoC::EmergencyDecision()
 		GlobalThrottle(isEmergency);
 	else if(NoximGlobalParams::throt_type == THROT_DISTRIBUTED)
 		DistributedThrottle(isEmergency);
+	else if(NoximGlobalParams::throt_type == THROT_OLDFGR)
+		Old_FGR(isEmergency);
 	else if(NoximGlobalParams::throt_type == THROT_FGR)
 		FGR(isEmergency);
 	else if(NoximGlobalParams::throt_type == THROT_TAVT)
@@ -1166,17 +1172,51 @@ void NoximNoC::DistributedThrottle(bool& isEmergency){
 		}
 	}
 }
+
+void NoximNoC::Old_FGR(bool& isEmergency){
+	for(int z=0; z < NoximGlobalParams::mesh_dim_z     ; z++)
+	for(int y=0; y < NoximGlobalParams::mesh_dim_y     ; y++)
+	for(int x=0; x < NoximGlobalParams::mesh_dim_x     ; x++){
+		if(t[x][y][z]->r->stats.temperature > NoximGlobalParams::threshold_para ){
+			//isEmergency = true;
+			double diff;
+			diff = t[x][y][z]->r->stats.temperature - NoximGlobalParams::threshold_para;
+			if(diff<0.2)
+				throttling2[x][y][z] = 1;
+			else if(diff<0.4)
+				throttling2[x][y][z] = 2;
+			else if(diff<0.7)
+				throttling2[x][y][z] = 3;
+			else 
+				throttling2[x][y][z] = 4;
+
+			throttling[x][y][z] = true;
+			isEmergency = true;
+			t[x][y][z]->pe->IntoEmergency();
+			t[x][y][z]->r ->IntoEmergency();
+		}
+		else{
+			t[x][y][z]->pe->OutOfEmergency();
+			t[x][y][z]->r ->OutOfEmergency();
+			throttling2[x][y][z] = 0;
+		}
+
+	}
+
+}
+
 //New Fine-Grained throttling, still in test
 void NoximNoC::FGR(bool& isEmergency){
 	for(int z=0; z < NoximGlobalParams::mesh_dim_z     ; z++)
 	for(int y=0; y < NoximGlobalParams::mesh_dim_y     ; y++) 
 	for(int x=0; x < NoximGlobalParams::mesh_dim_x     ; x++){
-		float criteria = deltaT[x][y][z] / 2;
+		float nxt_delta = deltaT[x][y][z] * 0.98;
+		float criteria = nxt_delta / 2;
 
-		if(t[x][y][z]->r->stats.temperature > NoximGlobalParams::threshold_para - criteria ){
+		if(t[x][y][z]->r->stats.temperature > NoximGlobalParams::threshold_para - 2*criteria ){
 			//isEmergency = true;
 			double diff;
-			diff = t[x][y][z]->r->stats.temperature - NoximGlobalParams::threshold_para + criteria;
+			diff = t[x][y][z]->r->stats.temperature - NoximGlobalParams::threshold_para + 2*criteria;
 			if(diff<criteria)
 				throttling2[x][y][z] = 1;
 			else if(diff<criteria*2)
@@ -1557,6 +1597,9 @@ void NoximNoC::TransientLog(){
 		}
 		transient_topology<<endl;			
 	}
+
+	global_maxtemp = global_maxtemp > max_temp ? global_maxtemp : max_temp;
+
 }
 
 void NoximNoC::_setThrot(int i, int j, int k){
